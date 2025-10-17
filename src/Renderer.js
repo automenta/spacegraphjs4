@@ -34,6 +34,17 @@ class Renderer {
     getScene() {
         return this.scene;
     }
+
+    setAnimationLoop(callback) {
+        this.renderer.setAnimationLoop(callback);
+    }
+
+    destroy() {
+        window.removeEventListener('resize', this.onWindowResize.bind(this));
+        this.renderer.setAnimationLoop(null);
+        this.renderer.dispose();
+        this.container.removeChild(this.renderer.domElement);
+    }
 }
 
 export default Renderer;
