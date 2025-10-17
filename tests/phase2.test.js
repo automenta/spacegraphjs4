@@ -7,14 +7,14 @@ describe('Phase 2: Dynamic Scene', () => {
     let browser;
     let page;
 
-    beforeAll(async () => {
-        // The setup is simple for now, but can be expanded
+    beforeEach(async () => {
         browser = await puppeteer.launch({ headless: true });
         page = await browser.newPage();
-        await page.goto('http://localhost:5173', { waitUntil: 'networkidle0' });
+        await page.goto('http://localhost:5173');
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
+        await page.close();
         await browser.close();
     });
 

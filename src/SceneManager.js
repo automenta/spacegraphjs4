@@ -4,6 +4,17 @@ class SceneManager {
     constructor(scene) {
         this.scene = scene;
         this.elements = new Map(); // Use a Map to store elements by ID
+        this.hoverFrame = this.createHoverFrame();
+        this.scene.add(this.hoverFrame);
+    }
+
+    createHoverFrame() {
+        const frameGeometry = new THREE.BoxGeometry(1, 1, 1);
+        const frameEdges = new THREE.EdgesGeometry(frameGeometry);
+        const frameMaterial = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
+        const frame = new THREE.LineSegments(frameEdges, frameMaterial);
+        frame.visible = false;
+        return frame;
     }
 
     // Generic method to create different types of meshes
@@ -66,6 +77,23 @@ class SceneManager {
         }
 
         // More properties can be updated here as needed
+    }
+
+    setHovered(elementId, isHovered) {
+        if (isHovered) {
+            const element = this.elements.get(elementId);
+            if (element) {
+                const box = new THREE.Box3().setFromObject(element);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+
+                this.hoverFrame.scale.set(size.x, size.y, size.z).multiplyScalar(1.1);
+                this.hoverFrame.position.copy(center);
+                this.hoverFrame.visible = true;
+            }
+        } else {
+            this.hoverFrame.visible = false;
+        }
     }
 }
 

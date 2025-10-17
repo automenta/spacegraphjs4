@@ -4,8 +4,10 @@ const container = document.getElementById('spacegraph-container');
 
 // Initial elements
 const initialElements = [
-    { id: 'node1', type: 'box', position: { x: -2, y: 0, z: 0 }, color: 0x00ff00 },
-    { id: 'node2', type: 'sphere', position: { x: 2, y: 0, z: 0 }, color: 0xff00ff },
+    { id: 'node1', type: 'box', position: { x: -4, y: 2, z: 0 }, color: 0x00ff00, size: 1 },
+    { id: 'node2', type: 'sphere', position: { x: 4, y: -2, z: 0 }, color: 0xff00ff, size: 1.5 },
+    { id: 'node3', type: 'box', position: { x: 0, y: 0, z: -4 }, color: 0x0000ff, size: 0.8 },
+    { id: 'node4', type: 'sphere', position: { x: 2, y: 3, z: 2 }, color: 0xffff00, size: 1.2 },
 ];
 
 // Create the SpaceGraph instance
@@ -13,35 +15,3 @@ const graph = new SpaceGraph(container, { elements: initialElements });
 
 // Expose the graph instance to the window for easy debugging
 window.graph = graph;
-
-// UI for testing the API
-document.getElementById('add-node').addEventListener('click', () => {
-    const id = `node${Date.now()}`;
-    graph.add({
-        id,
-        type: 'box',
-        position: {
-            x: (Math.random() - 0.5) * 8,
-            y: (Math.random() - 0.5) * 4,
-            z: (Math.random() - 0.5) * 4,
-        },
-        color: Math.random() * 0xffffff,
-    });
-    console.log(`Added node: ${id}`);
-});
-
-document.getElementById('remove-node').addEventListener('click', () => {
-    const idToRemove = prompt('Enter the ID of the node to remove (e.g., node1):');
-    if (idToRemove) {
-        graph.remove(idToRemove);
-        console.log(`Removed node: ${idToRemove}`);
-    }
-});
-
-document.getElementById('update-node').addEventListener('click', () => {
-    const idToUpdate = prompt('Enter the ID of the node to update (e.g., node2):');
-    if (idToUpdate) {
-        graph.update(idToUpdate, { color: 0xff0000 }); // Change color to red
-        console.log(`Updated node: ${idToUpdate}`);
-    }
-});

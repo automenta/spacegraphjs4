@@ -15,12 +15,13 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/automenta/spacegraphjs4/issues"
   },
   "homepage": "https://github.com/automenta/spacegraphjs4#readme",
   "dependencies": {
+    "@tweenjs/tween.js": "^25.0.0",
     "three": "^0.180.0"
   },
   "devDependencies": {

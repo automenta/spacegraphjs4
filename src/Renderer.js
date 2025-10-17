@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 
 class Renderer {
-    constructor(container) {
+    constructor(container, camera) {
         this.container = container;
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
+        this.camera = camera;
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
 
         this.setup();
@@ -14,8 +14,6 @@ class Renderer {
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.container.appendChild(this.renderer.domElement);
-
-        this.camera.position.z = 5;
 
         window.addEventListener('resize', this.onWindowResize.bind(this));
     }
