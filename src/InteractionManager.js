@@ -1,18 +1,22 @@
 import * as THREE from 'three';
 
 class InteractionManager {
-    constructor(camera, canvas, sceneManager, cameraManager) {
+    constructor(camera, canvas, sceneManager, cameraManager, eventDispatcher) {
         this.camera = camera;
         this.canvas = canvas;
         this.sceneManager = sceneManager;
         this.cameraManager = cameraManager;
+        this.eventDispatcher = eventDispatcher; // To dispatch events like 'element:click'
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredElementId = null;
         this.focusedElementId = null; // The element the camera is currently focused on
 
-        this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
-        this.canvas.addEventListener('click', this.onClick.bind(this), false);
+        this.onMouseMove = this.onMouseMove.bind(this);
+        this.onClick = this.onClick.bind(this);
+
+        this.canvas.addEventListener('mousemove', this.onMouseMove, false);
+        this.canvas.addEventListener('click', this.onClick, false);
     }
 
     onMouseMove(event) {
@@ -38,18 +42,19 @@ class InteractionManager {
     }
 
     onClick(event) {
-        if (!this.hoveredElementId) return;
+        if (this.hoveredElementId) {
+            // Dispatch a generic click event with the element's ID
+            this.eventDispatcher.dispatchEvent({ type: 'element:click', id: this.hoveredElementId });
 
-        // If clicking the already focused element, go back.
-        if (this.hoveredElementId === this.focusedElementId) {
-            this.cameraManager.goBack();
-            this.focusedElementId = null; // Clear focus after going back
-        } else {
-            // Otherwise, fly to the new element.
             const element = this.sceneManager.elements.get(this.hoveredElementId);
             if (element) {
-                this.cameraManager.flyTo(element);
-                this.focusedElementId = this.hoveredElementId; // Set new focus
+                if (this.hoveredElementId === this.focusedElementId) {
+                    this.cameraManager.goBack();
+                    this.focusedElementId = null; // Clear focus
+                } else {
+                    this.cameraManager.flyTo(element);
+                    this.focusedElementId = this.hoveredElementId; // Set new focus
+                }
             }
         }
     }

@@ -4,15 +4,16 @@ import SceneManager from './SceneManager.js';
 import CameraManager from './CameraManager.js';
 import InteractionManager from './InteractionManager.js';
 
-class SpaceGraph {
+class SpaceGraph extends THREE.EventDispatcher {
     constructor(container, { elements = [] } = {}) {
+        super();
         const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.z = 5;
 
         this.cameraManager = new CameraManager(camera);
         this.renderer = new Renderer(container, camera);
         this.sceneManager = new SceneManager(this.renderer.getScene());
-        this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this.cameraManager);
+        this.interactionManager = new InteractionManager(camera, this.renderer.cssRenderer.domElement, this.sceneManager, this.cameraManager, this);
 
 
         // Initialize with a set of elements
@@ -26,17 +27,18 @@ class SpaceGraph {
 
     add(element) {
         this.sceneManager.add(element);
-        this.renderer.render(); // Re-render after adding
     }
 
     remove(elementId) {
         this.sceneManager.remove(elementId);
-        this.renderer.render(); // Re-render after removing
     }
 
     update(elementId, props) {
         this.sceneManager.update(elementId, props);
-        this.renderer.render(); // Re-render after updating
+    }
+
+    goBack() {
+        this.cameraManager.goBack();
     }
 
     // A simple animation loop
@@ -48,9 +50,18 @@ class SpaceGraph {
     }
 
     destroy() {
+        this.renderer.setAnimationLoop(null);
         this.renderer.destroy();
         this.interactionManager.destroy();
-        // Additional cleanup for other managers will go here
+        // Clear all elements from the scene
+        [...this.sceneManager.elements.keys()].forEach(id => this.sceneManager.remove(id));
+        // Remove all event listeners
+        this.removeEventListener();
+    }
+
+    // Alias for addEventListener
+    on(type, listener) {
+        this.addEventListener(type, listener);
     }
 }
 
