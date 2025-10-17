@@ -1,0 +1,32 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "This plan is the definitive roadmap for building and shipping **SpaceGraph.js v1.0**. Its sole purpose is to produce a stable, minimal, and shippable Zooming User Interface (ZUI) library. The central interaction paradigm is **AutoZoom**, and all development effort will be directed toward perfecting this core experience.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "test": "jest",
+    "test:e2e": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/automenta/spacegraphjs4.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/automenta/spacegraphjs4/issues"
+  },
+  "homepage": "https://github.com/automenta/spacegraphjs4#readme",
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-image-snapshot": "^6.5.1",
+    "puppeteer": "^24.25.0",
+    "vite": "^7.1.10"
+  }
+}
