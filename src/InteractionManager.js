@@ -9,6 +9,7 @@ class InteractionManager {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredElementId = null;
+        this.focusedElementId = null; // The element the camera is currently focused on
 
         this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
         this.canvas.addEventListener('click', this.onClick.bind(this), false);
@@ -20,7 +21,8 @@ class InteractionManager {
         this.mouse.y = -(event.clientY / this.canvas.clientHeight) * 2 + 1;
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.sceneManager.getScene().children);
+        // Ensure we only intersect with the elements we manage, not the whole scene
+        const intersects = this.raycaster.intersectObjects([...this.sceneManager.elements.values()]);
 
         if (intersects.length > 0) {
             const intersectedObject = intersects[0].object;
@@ -36,9 +38,19 @@ class InteractionManager {
     }
 
     onClick(event) {
-        if (this.hoveredElementId) {
+        if (!this.hoveredElementId) return;
+
+        // If clicking the already focused element, go back.
+        if (this.hoveredElementId === this.focusedElementId) {
+            this.cameraManager.goBack();
+            this.focusedElementId = null; // Clear focus after going back
+        } else {
+            // Otherwise, fly to the new element.
             const element = this.sceneManager.elements.get(this.hoveredElementId);
-            this.cameraManager.flyTo(element);
+            if (element) {
+                this.cameraManager.flyTo(element);
+                this.focusedElementId = this.hoveredElementId; // Set new focus
+            }
         }
     }
 

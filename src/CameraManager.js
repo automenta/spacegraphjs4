@@ -6,6 +6,8 @@ class CameraManager {
         this.camera = camera;
         this.history = []; // Stack to store previous camera states
         this.isAnimating = false;
+        // The point the camera is currently looking at
+        this.currentTarget = new THREE.Vector3(0, 0, 0);
     }
 
     // Fly the camera to a target element
@@ -15,7 +17,7 @@ class CameraManager {
         // Save current state before flying
         this.history.push({
             position: this.camera.position.clone(),
-            target: new THREE.Vector3(0, 0, 0), // Assuming the general focus is the center
+            target: this.currentTarget.clone(),
         });
 
         const targetObject = element; // Assuming element is a THREE.Object3D
@@ -23,13 +25,24 @@ class CameraManager {
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        // Calculate the distance to frame the object
-        const maxDim = Math.max(size.x, size.y, size.z);
+        const padding = 1.2; // 20% padding
         const fov = this.camera.fov * (Math.PI / 180);
-        let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-        cameraZ *= 1.2; // Add 20% padding
+        const aspect = this.camera.aspect;
 
-        const targetPosition = new THREE.Vector3(center.x, center.y, center.z + cameraZ);
+        // Calculate the distance required to fit the object's height within the vertical FOV
+        const distanceHeight = (size.y / 2) / Math.tan(fov / 2);
+
+        // Calculate the horizontal FOV
+        const hfov = 2 * Math.atan(Math.tan(fov / 2) * aspect);
+
+        // Calculate the distance required to fit the object's width within the horizontal FOV
+        const distanceWidth = (size.x / 2) / Math.tan(hfov / 2);
+
+        // Use the larger of the two distances to ensure the entire object is framed
+        const distance = padding * Math.max(distanceHeight, distanceWidth);
+
+        const direction = new THREE.Vector3().subVectors(this.camera.position, center).normalize();
+        const targetPosition = new THREE.Vector3().addVectors(center, direction.multiplyScalar(distance));
 
         this.animateCamera(targetPosition, center);
     }
@@ -47,19 +60,27 @@ class CameraManager {
         this.isAnimating = true;
 
         const currentPosition = this.camera.position.clone();
-        // The target to look at should not be animated, but set directly
-        const lookAt = targetLookAt;
+        const currentLookAt = this.currentTarget.clone();
 
         new TWEEN.Tween(currentPosition)
-            .to(targetPosition, 500) // 500ms animation
+            .to(targetPosition, 500)
             .easing(TWEEN.Easing.Quadratic.InOut)
-            .onUpdate((pos) => {
-                this.camera.position.copy(pos);
-                this.camera.lookAt(lookAt);
+            .onUpdate(() => {
+                this.camera.position.copy(currentPosition);
+            })
+            .start();
+
+        new TWEEN.Tween(currentLookAt)
+            .to(targetLookAt, 500)
+            .easing(TWEEN.Easing.Quadratic.InOut)
+            .onUpdate(() => {
+                this.camera.lookAt(currentLookAt);
+                this.currentTarget.copy(currentLookAt);
             })
             .onComplete(() => {
                 this.isAnimating = false;
-                this.camera.lookAt(lookAt); // Ensure final lookAt is correct
+                this.camera.lookAt(targetLookAt);
+                this.currentTarget.copy(targetLookAt);
             })
             .start();
     }
