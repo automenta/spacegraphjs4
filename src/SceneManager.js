@@ -21,42 +21,37 @@ class SceneManager {
     }
 
     createNode(element) {
-        let object;
+        const { id, type, color = 0xffffff, size = 1, htmlContent = '' } = element;
+        let object, geometry, material;
 
-        switch (element.type) {
+        switch (type) {
             case 'html': {
                 const div = document.createElement('div');
-                div.innerHTML = element.htmlContent || '';
-                div.style.pointerEvents = 'auto'; // Crucial for allowing clicks
-
+                div.innerHTML = htmlContent;
+                div.style.pointerEvents = 'auto';
+                div.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    this.eventDispatcher.dispatchEvent({ type: 'element:click', id });
+                });
                 object = new CSS3DObject(div);
                 const scale = 0.01;
                 object.scale.set(scale, scale, scale);
-
-                div.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    this.eventDispatcher.dispatchEvent({ type: 'element:click', id: element.id });
-                });
                 break;
             }
-            case 'sphere': {
-                const material = new THREE.MeshBasicMaterial({ color: element.color || 0xffffff });
-                const geometry = new THREE.SphereGeometry(element.size || 1, 32, 32);
+            case 'sphere':
+                geometry = new THREE.SphereGeometry(size, 32, 32);
+                material = new THREE.MeshBasicMaterial({ color });
                 object = new THREE.Mesh(geometry, material);
                 break;
-            }
             case 'box':
-            default: {
-                const material = new THREE.MeshBasicMaterial({ color: element.color || 0xffffff });
-                const geometry = new THREE.BoxGeometry(element.size || 1, element.size || 1, element.size || 1);
+            default:
+                geometry = new THREE.BoxGeometry(size, size, size);
+                material = new THREE.MeshBasicMaterial({ color });
                 object = new THREE.Mesh(geometry, material);
                 break;
-            }
         }
 
-        object.position.set(0, 0, 0); // Initialize at origin; layout manager will position it
-        object.userData.id = element.id;
-        object.userData.type = element.type;
+        object.userData = { id, type };
         return object;
     }
 
@@ -93,41 +88,23 @@ class SceneManager {
     }
 
     add(element) {
-        if (element.type === 'edge') {
-            this.addEdge(element);
-        } else {
-            this.addNode(element);
-        }
-    }
+        const isEdge = element.type === 'edge';
+        const collection = isEdge ? this.edges : this.nodes;
 
-    addNode(nodeData) {
-        if (this.nodes.has(nodeData.id)) {
-            console.warn(`Node with ID ${nodeData.id} already exists.`);
+        if (collection.has(element.id)) {
+            console.warn(`${isEdge ? 'Edge' : 'Node'} with ID ${element.id} already exists.`);
             return;
         }
-        const nodeObject = this.createNode(nodeData);
-        this.nodes.set(nodeData.id, nodeObject);
-        this.scene.add(nodeObject);
-    }
 
-    addEdge(edgeData) {
-        if (this.edges.has(edgeData.id)) {
-            console.warn(`Edge with ID ${edgeData.id} already exists.`);
-            return;
-        }
-        const edgeObject = this.createEdge(edgeData);
-        if (edgeObject) {
-            this.edges.set(edgeData.id, edgeObject);
-            this.scene.add(edgeObject);
+        const object = isEdge ? this.createEdge(element) : this.createNode(element);
+        if (object) {
+            collection.set(element.id, object);
+            this.scene.add(object);
         }
     }
 
     remove(elementId) {
-        if (this.nodes.has(elementId)) {
-            this.removeNode(elementId);
-        } else if (this.edges.has(elementId)) {
-            this.removeEdge(elementId);
-        }
+        this.removeNode(elementId) || this.removeEdge(elementId);
     }
 
     removeNode(nodeId) {
@@ -184,20 +161,37 @@ class SceneManager {
         }
     }
 
+    updateLayout(simulationNodes) {
+        // Update node positions
+        simulationNodes.forEach(nodeData => {
+            const nodeObject = this.nodes.get(nodeData.id);
+            if (nodeObject) {
+                nodeObject.position.set(nodeData.x, nodeData.y, nodeData.z);
+            }
+        });
+
+        // Update edge positions
+        this.edges.forEach(edge => this.updateEdgePosition(edge));
+    }
+
+    updateEdgePosition(edge) {
+        const sourceNode = this.nodes.get(edge.userData.source);
+        const targetNode = this.nodes.get(edge.userData.target);
+        if (!sourceNode || !targetNode) return;
+
+        const positions = edge.geometry.attributes.position;
+        positions.setXYZ(0, sourceNode.position.x, sourceNode.position.y, sourceNode.position.z);
+        positions.setXYZ(1, targetNode.position.x, targetNode.position.y, targetNode.position.z);
+        positions.needsUpdate = true;
+        if (edge.material.isLineDashedMaterial) {
+            edge.computeLineDistances();
+        }
+    }
+
     updateConnectedEdges(nodeId) {
         this.edges.forEach(edge => {
             if (edge.userData.source === nodeId || edge.userData.target === nodeId) {
-                const sourceNode = this.nodes.get(edge.userData.source);
-                const targetNode = this.nodes.get(edge.userData.target);
-                if (sourceNode && targetNode) {
-                    const positions = edge.geometry.attributes.position;
-                    positions.setXYZ(0, sourceNode.position.x, sourceNode.position.y, sourceNode.position.z);
-                    positions.setXYZ(1, targetNode.position.x, targetNode.position.y, targetNode.position.z);
-                    positions.needsUpdate = true;
-                    if (edge.material.isLineDashedMaterial) {
-                        edge.computeLineDistances();
-                    }
-                }
+                this.updateEdgePosition(edge);
             }
         });
     }

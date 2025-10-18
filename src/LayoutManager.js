@@ -1,10 +1,10 @@
 import * as d3 from 'd3-force-3d';
 
 class LayoutManager {
-    constructor(nodes, edges, onUpdate) {
+    constructor(nodes, edges, sceneManager) {
         this.nodes = nodes;
         this.edges = edges;
-        this.onUpdate = onUpdate; // Callback to update THREE.js objects
+        this.sceneManager = sceneManager;
 
         this.simulation = this.initSimulation();
     }
@@ -25,8 +25,8 @@ class LayoutManager {
 
     ticked() {
         // The simulation has updated the positions in the data.
-        // Now, trigger the callback to update the visual representation.
-        this.onUpdate();
+        // Now, update the visual representation in the SceneManager.
+        this.sceneManager.updateLayout(this.simulation.nodes());
     }
 
     destroy() {

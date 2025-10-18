@@ -28,35 +28,10 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.layoutManager = new LayoutManager(
             nodes,
             edges,
-            this.onLayoutUpdate.bind(this)
+            this.sceneManager // Pass the sceneManager instance
         );
 
         this.start();
-    }
-
-    onLayoutUpdate() {
-        // Update node positions
-        this.layoutManager.simulation.nodes().forEach(nodeData => {
-            const nodeObject = this.sceneManager.nodes.get(nodeData.id);
-            if (nodeObject) {
-                nodeObject.position.set(nodeData.x, nodeData.y, nodeData.z);
-            }
-        });
-
-        // Update edge positions
-        this.sceneManager.edges.forEach(edge => {
-            const sourceNode = this.sceneManager.nodes.get(edge.userData.source);
-            const targetNode = this.sceneManager.nodes.get(edge.userData.target);
-            if (sourceNode && targetNode) {
-                const positions = edge.geometry.attributes.position;
-                positions.setXYZ(0, sourceNode.position.x, sourceNode.position.y, sourceNode.position.z);
-                positions.setXYZ(1, targetNode.position.x, targetNode.position.y, targetNode.position.z);
-                positions.needsUpdate = true;
-                if (edge.material.isLineDashedMaterial) {
-                    edge.computeLineDistances();
-                }
-            }
-        });
     }
 
     add(element) {

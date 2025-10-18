@@ -98,12 +98,9 @@ class Renderer {
         window.removeEventListener('resize', this.onWindowResize.bind(this));
         this.renderer.setAnimationLoop(null);
         this.renderer.dispose();
-        if (this.renderer.domElement.parentElement === this.container) {
-            this.container.removeChild(this.renderer.domElement);
-        }
-        if (this.cssRenderer.domElement.parentElement === this.container) {
-            this.container.removeChild(this.cssRenderer.domElement);
-        }
+
+        this.container.contains(this.renderer.domElement) && this.container.removeChild(this.renderer.domElement);
+        this.container.contains(this.cssRenderer.domElement) && this.container.removeChild(this.cssRenderer.domElement);
     }
 }
 

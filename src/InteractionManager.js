@@ -19,50 +19,29 @@ class InteractionManager {
     }
 
     onMouseMove(event) {
-        // Calculate mouse position in normalized device coordinates
         this.mouse.x = (event.clientX / this.canvas.clientWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / this.canvas.clientHeight) * 2 + 1;
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
-        // Ensure we only intersect with the elements we manage, not the whole scene
-        const intersects = this.raycaster.intersectObjects([...this.sceneManager.elements.values()]);
+        const intersects = this.raycaster.intersectObjects([...this.sceneManager.nodes.values()]);
 
-        if (intersects.length > 0) {
-            const intersectedObject = intersects[0].object;
-            // IMPORTANT: Ignore 'html' type for hover-framing, as per requirements.
-            if (intersectedObject.userData.type === 'html') {
-                this.setHovered(null);
-                return;
-            }
+        const intersectedObject = intersects.length > 0 ? intersects[0].object : null;
+        const isHtml = intersectedObject?.userData.type === 'html';
+        const newHoveredId = (intersectedObject && !isHtml) ? intersectedObject.userData.id : null;
 
-            const elementId = intersectedObject.userData.id;
-            if (this.hoveredElementId !== elementId) {
-                this.setHovered(elementId);
-            }
-        } else {
-            if (this.hoveredElementId !== null) {
-                this.setHovered(null);
-            }
+        if (this.hoveredElementId !== newHoveredId) {
+            this.setHovered(newHoveredId);
         }
     }
 
     onCanvasClick(event) {
-        // This handles clicks on the canvas for geometric objects
-        if (this.hoveredElementId) {
-            const element = this.sceneManager.elements.get(this.hoveredElementId);
-            if (element && element.userData.type !== 'html') {
-                // Dispatch a generic click event with the element's ID
-                this.graph.dispatchEvent({ type: 'element:click', id: this.hoveredElementId });
+        if (!this.hoveredElementId) return;
 
-                if (this.hoveredElementId === this.focusedElementId) {
-                    this.graph.goBack();
-                    this.focusedElementId = null; // Clear focus
-                } else {
-                    this.graph.flyTo(this.hoveredElementId);
-                    this.focusedElementId = this.hoveredElementId; // Set new focus
-                }
-            }
-        }
+        this.graph.dispatchEvent({ type: 'element:click', id: this.hoveredElementId });
+
+        const isFocused = this.hoveredElementId === this.focusedElementId;
+        this.focusedElementId = isFocused ? null : this.hoveredElementId;
+        isFocused ? this.graph.goBack() : this.graph.flyTo(this.hoveredElementId);
     }
 
     setHovered(elementId, object) {
