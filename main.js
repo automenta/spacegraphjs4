@@ -121,3 +121,5 @@ window.graph = graph;
 graph.on('element:click', (event) => {
     console.log(`Element clicked: ${event.id}`);
 });
+
+export default SpaceGraph;

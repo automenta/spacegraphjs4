@@ -54,6 +54,33 @@ class CameraManager {
         this.animateCamera(prevState.position, prevState.target);
     }
 
+    // Zoom towards a specific point
+    zoom(delta, targetPosition) {
+        if (this.isAnimating) return;
+
+        const zoomTarget = targetPosition || this.controls.target;
+
+        // When zooming towards a specific object, we should update the controls target
+        if (targetPosition) {
+            this.controls.target.copy(targetPosition);
+        }
+
+        const direction = new THREE.Vector3().subVectors(this.camera.position, zoomTarget);
+        const distance = direction.length();
+
+        const newDistance = Math.max(
+            this.config.controls.minDistance,
+            Math.min(this.config.controls.maxDistance, distance + delta)
+        );
+
+        if (Math.abs(newDistance - distance) < 0.001) return;
+
+        direction.normalize();
+        const newPosition = zoomTarget.clone().add(direction.multiplyScalar(newDistance));
+
+        this.camera.position.copy(newPosition);
+    }
+
     // Animate camera to a new position and target
     animateCamera(targetPosition, targetLookAt) {
         this.isAnimating = true;
@@ -82,6 +109,7 @@ class CameraManager {
                 this.isAnimating = false;
                 this.controls.enabled = true;
                 this.camera.lookAt(targetLookAt);
+                this.controls.target.copy(targetLookAt);
                 this.currentTarget.copy(targetLookAt);
             })
             .start();

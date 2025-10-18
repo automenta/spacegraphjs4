@@ -5,6 +5,7 @@ import CameraManager from './CameraManager.js';
 import InteractionManager from './InteractionManager.js';
 import LayoutManager from './LayoutManager.js';
 import GraphManager from './GraphManager.js';
+import TooltipManager from './TooltipManager.js';
 import { mergeConfig } from './Config.js';
 
 class SpaceGraph extends THREE.EventDispatcher {
@@ -24,9 +25,10 @@ class SpaceGraph extends THREE.EventDispatcher {
 
         this.cameraManager = new CameraManager(camera, container, config);
         this.renderer = new Renderer(container, camera, config);
+        this.tooltipManager = new TooltipManager(container, config.interactions.tooltip);
         this.sceneManager = new SceneManager(this.renderer.getScene(), this.graphManager, this, config);
         this.layoutManager = new LayoutManager(this.graphManager, this.sceneManager, config);
-        this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this, config);
+        this.interactionManager = new InteractionManager(this.cameraManager, this.renderer.renderer.domElement, this.sceneManager, this, this.tooltipManager, config);
 
         this.start();
         this.setupEventListeners();
@@ -83,6 +85,7 @@ class SpaceGraph extends THREE.EventDispatcher {
 
         // 2. Clean up managers
         this.interactionManager.destroy();
+        this.tooltipManager.destroy();
         this.sceneManager.destroy(); // Will clear the scene and dispose objects
 
         // 3. Destroy the renderer and remove its canvas

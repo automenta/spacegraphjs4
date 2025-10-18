@@ -41,6 +41,14 @@ const defaultConfig = {
         },
     },
     interactions: {
+        zoom: {
+            sensitivity: 0.025,
+        },
+        tooltip: {
+            enabled: true,
+            offset: { x: 10, y: 10 },
+            className: 'spacegraph-tooltip',
+        },
         html: {
             pointerEvents: 'auto',
         },

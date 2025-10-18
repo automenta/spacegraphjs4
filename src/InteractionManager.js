@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 
 class InteractionManager {
-    constructor(camera, canvas, sceneManager, graph, config) { // graph is the eventDispatcher and public API
-        this.camera = camera;
+    constructor(cameraManager, canvas, sceneManager, graph, tooltipManager, config) { // graph is the eventDispatcher and public API
+        this.cameraManager = cameraManager;
+        this.camera = cameraManager.camera;
         this.canvas = canvas;
         this.sceneManager = sceneManager;
         this.graph = graph;
+        this.tooltipManager = tooltipManager;
         this.config = config.interactions;
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
@@ -19,11 +21,13 @@ class InteractionManager {
         this.onMouseDown = this.onMouseDown.bind(this);
         this.onMouseUp = this.onMouseUp.bind(this);
         this.onMouseMove = this.onMouseMove.bind(this);
+        this.onWheel = this.onWheel.bind(this);
         this.onCanvasClick = this.onCanvasClick.bind(this);
 
         this.canvas.addEventListener('mousedown', this.onMouseDown, false);
         this.canvas.addEventListener('mouseup', this.onMouseUp, false);
         this.canvas.addEventListener('mousemove', this.onMouseMove, false);
+        this.canvas.addEventListener('wheel', this.onWheel, { passive: false });
     }
 
     onMouseDown(event) {
@@ -58,7 +62,12 @@ class InteractionManager {
         const newHoveredId = (intersectedObject && !isHtml) ? intersectedObject.userData.id : null;
 
         if (this.hoveredElementId !== newHoveredId) {
-            this.setHovered(newHoveredId);
+            this.setHovered(newHoveredId, event);
+        }
+
+        // Update tooltip position if the same element is still hovered
+        if (this.hoveredElementId) {
+            this.updateTooltipPosition(event);
         }
     }
 
@@ -83,10 +92,11 @@ class InteractionManager {
         }
     }
 
-    setHovered(elementId) {
+    setHovered(elementId, event) {
         // Unhover previous element
         if (this.hoveredElementId) {
             this.sceneManager.setHovered(this.hoveredElementId, false);
+            this.tooltipManager.hide();
         }
 
         this.hoveredElementId = elementId;
@@ -94,6 +104,30 @@ class InteractionManager {
         // Hover new element
         if (this.hoveredElementId) {
             this.sceneManager.setHovered(this.hoveredElementId, true);
+            const node = this.graph.graphManager.getNode(this.hoveredElementId);
+            if (node) {
+                this.tooltipManager.show(node.tooltip || node.id, event.clientX, event.clientY);
+            }
+        }
+    }
+
+    onWheel(event) {
+        event.preventDefault();
+        const delta = -event.deltaY * this.config.zoom.sensitivity;
+        let zoomTarget = null;
+        if (this.hoveredElementId) {
+            const element = this.sceneManager.elements.get(this.hoveredElementId);
+            if (element) {
+                zoomTarget = new THREE.Vector3().setFromMatrixPosition(element.matrixWorld);
+            }
+        }
+        this.cameraManager.zoom(delta, zoomTarget);
+    }
+
+    updateTooltipPosition(event) {
+        const node = this.graph.graphManager.getNode(this.hoveredElementId);
+        if (node) {
+            this.tooltipManager.show(node.tooltip || node.id, event.clientX, event.clientY);
         }
     }
 
@@ -101,6 +135,7 @@ class InteractionManager {
         this.canvas.removeEventListener('mousedown', this.onMouseDown);
         this.canvas.removeEventListener('mouseup', this.onMouseUp);
         this.canvas.removeEventListener('mousemove', this.onMouseMove);
+        this.canvas.removeEventListener('wheel', this.onWheel);
     }
 }
 
