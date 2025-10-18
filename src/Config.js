@@ -16,6 +16,13 @@ const defaultConfig = {
             duration: 500,
             easing: 'Quadratic.InOut',
         },
+        controls: {
+            enableDamping: true,
+            dampingFactor: 0.05,
+            screenSpacePanning: false,
+            minDistance: 1,
+            maxDistance: 500,
+        }
     },
     renderer: {
         bloom: {

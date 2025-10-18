@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 class CameraManager {
     constructor(camera, container, config) {
@@ -10,6 +11,14 @@ class CameraManager {
         this.isAnimating = false;
         // The point the camera is currently looking at
         this.currentTarget = new THREE.Vector3(0, 0, 0);
+
+        this.controls = new OrbitControls(this.camera, this.container);
+        const controlsConfig = this.config.controls;
+        this.controls.enableDamping = controlsConfig.enableDamping;
+        this.controls.dampingFactor = controlsConfig.dampingFactor;
+        this.controls.screenSpacePanning = controlsConfig.screenSpacePanning;
+        this.controls.minDistance = controlsConfig.minDistance;
+        this.controls.maxDistance = controlsConfig.maxDistance;
     }
 
     // Fly the camera to a target element
@@ -48,6 +57,7 @@ class CameraManager {
     // Animate camera to a new position and target
     animateCamera(targetPosition, targetLookAt) {
         this.isAnimating = true;
+        this.controls.enabled = false;
 
         const { duration, easing } = this.config.flyTo;
         const easingFunction = TWEEN.Easing[easing.split('.')[0]][easing.split('.')[1]];
@@ -70,6 +80,7 @@ class CameraManager {
             })
             .onComplete(() => {
                 this.isAnimating = false;
+                this.controls.enabled = true;
                 this.camera.lookAt(targetLookAt);
                 this.currentTarget.copy(targetLookAt);
             })
@@ -79,6 +90,7 @@ class CameraManager {
     // Update needs to be called in the main animation loop
     update(time) {
         TWEEN.update(time);
+        this.controls.update();
     }
 }
 

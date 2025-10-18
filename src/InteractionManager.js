@@ -12,14 +12,41 @@ class InteractionManager {
         this.hoveredElementId = null;
         this.focusedElementId = null;
 
+        this.isDragging = false;
+        this.dragThreshold = 3;
+        this.downPosition = new THREE.Vector2();
+
+        this.onMouseDown = this.onMouseDown.bind(this);
+        this.onMouseUp = this.onMouseUp.bind(this);
         this.onMouseMove = this.onMouseMove.bind(this);
         this.onCanvasClick = this.onCanvasClick.bind(this);
 
+        this.canvas.addEventListener('mousedown', this.onMouseDown, false);
+        this.canvas.addEventListener('mouseup', this.onMouseUp, false);
         this.canvas.addEventListener('mousemove', this.onMouseMove, false);
-        this.canvas.addEventListener('click', this.onCanvasClick, false);
+    }
+
+    onMouseDown(event) {
+        this.isDragging = false;
+        this.downPosition.set(event.clientX, event.clientY);
+    }
+
+    onMouseUp(event) {
+        if (!this.isDragging) {
+            this.onCanvasClick(event);
+        }
     }
 
     onMouseMove(event) {
+        if (event.buttons > 0) { // If mouse button is held down
+            if (!this.isDragging) { // Only check if not already dragging
+                const distance = this.downPosition.distanceTo(new THREE.Vector2(event.clientX, event.clientY));
+                if (distance > this.dragThreshold) {
+                    this.isDragging = true;
+                }
+            }
+        }
+
         this.mouse.x = (event.clientX / this.canvas.clientWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / this.canvas.clientHeight) * 2 + 1;
 
@@ -71,8 +98,9 @@ class InteractionManager {
     }
 
     destroy() {
+        this.canvas.removeEventListener('mousedown', this.onMouseDown);
+        this.canvas.removeEventListener('mouseup', this.onMouseUp);
         this.canvas.removeEventListener('mousemove', this.onMouseMove);
-        this.canvas.removeEventListener('click', this.onCanvasClick);
     }
 }
 
