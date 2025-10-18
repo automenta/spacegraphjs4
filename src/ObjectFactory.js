@@ -5,28 +5,13 @@ class ObjectFactory {
     constructor(elements, eventDispatcher) {
         this.elements = elements;
         this.eventDispatcher = eventDispatcher;
+        this.nodeCreators = this._initializeNodeCreators();
     }
 
-    create(element) {
-        switch (element.type) {
-            case 'edge':
-                return this._createEdge(element);
-            case 'html':
-            case 'sphere':
-            case 'box':
-                return this._createNode(element);
-            default:
-                console.warn(`Unknown element type: ${element.type}`);
-                return null;
-        }
-    }
-
-    _createNode(element) {
-        const { id, type, color = 0xffffff, size = 1, htmlContent = '' } = element;
-        let object, geometry, material;
-
-        switch (type) {
-            case 'html': {
+    _initializeNodeCreators() {
+        return {
+            'html': (element) => {
+                const { id, htmlContent = '' } = element;
                 const div = document.createElement('div');
                 div.innerHTML = htmlContent;
                 div.style.pointerEvents = 'auto';
@@ -34,25 +19,41 @@ class ObjectFactory {
                     event.stopPropagation();
                     this.eventDispatcher.dispatchEvent({ type: 'element:click', id });
                 });
-                object = new CSS3DObject(div);
+                const object = new CSS3DObject(div);
                 const scale = 0.01;
                 object.scale.set(scale, scale, scale);
-                break;
-            }
-            case 'sphere':
-                geometry = new THREE.SphereGeometry(size, 32, 32);
-                material = new THREE.MeshBasicMaterial({ color });
-                object = new THREE.Mesh(geometry, material);
-                break;
-            case 'box':
-            default:
-                geometry = new THREE.BoxGeometry(size, size, size);
-                material = new THREE.MeshBasicMaterial({ color });
-                object = new THREE.Mesh(geometry, material);
-                break;
-        }
+                return object;
+            },
+            'sphere': (element) => {
+                const { color = 0xffffff, size = 1 } = element;
+                const geometry = new THREE.SphereGeometry(size, 32, 32);
+                const material = new THREE.MeshBasicMaterial({ color });
+                return new THREE.Mesh(geometry, material);
+            },
+            'box': (element) => {
+                const { color = 0xffffff, size = 1 } = element;
+                const geometry = new THREE.BoxGeometry(size, size, size);
+                const material = new THREE.MeshBasicMaterial({ color });
+                return new THREE.Mesh(geometry, material);
+            },
+        };
+    }
 
-        object.userData = { id, type };
+    create(element) {
+        if (element.type === 'edge') {
+            return this._createEdge(element);
+        }
+        return this._createNode(element);
+    }
+
+    _createNode(element) {
+        const creator = this.nodeCreators[element.type] || this.nodeCreators['box']; // Default to 'box'
+        if (!creator) {
+            console.warn(`Unknown node type: ${element.type}`);
+            return null;
+        }
+        const object = creator(element);
+        object.userData = { id: element.id, type: element.type };
         return object;
     }
 

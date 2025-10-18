@@ -4,6 +4,7 @@ import SceneManager from './SceneManager.js';
 import CameraManager from './CameraManager.js';
 import InteractionManager from './InteractionManager.js';
 import LayoutManager from './LayoutManager.js';
+import GraphManager from './GraphManager.js';
 
 class SpaceGraph extends THREE.EventDispatcher {
     constructor(container, { elements = [], backgroundColor = 0x000000, bloom = {} } = {}) {
@@ -11,33 +12,26 @@ class SpaceGraph extends THREE.EventDispatcher {
         const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.z = 35; // Zoom out to see the whole graph
 
+        this.graphManager = new GraphManager();
         this.cameraManager = new CameraManager(camera, container);
         this.renderer = new Renderer(container, camera, { bloom });
         this.renderer.setBackgroundColor(backgroundColor);
-        this.sceneManager = new SceneManager(this.renderer.getScene(), this);
+        this.sceneManager = new SceneManager(this.renderer.getScene(), this, this.graphManager);
         this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this);
+        this.layoutManager = new LayoutManager(this.graphManager, this.sceneManager);
 
         // Process initial elements
-        // Add nodes first, then edges
-        elements.filter(el => el.type !== 'edge').forEach(node => this.sceneManager.add(node));
-        elements.filter(el => el.type === 'edge').forEach(edge => this.sceneManager.add(edge));
-
-        // Initialize layout manager
-        this.layoutManager = new LayoutManager(
-            elements.filter(el => el.type !== 'edge'),
-            elements.filter(el => el.type === 'edge'),
-            this.sceneManager // Pass the sceneManager instance
-        );
+        elements.forEach(element => this.graphManager.add(element));
 
         this.start();
     }
 
     add(element) {
-        this.sceneManager.add(element);
+        this.graphManager.add(element);
     }
 
     remove(elementId) {
-        this.sceneManager.remove(elementId);
+        this.graphManager.remove(elementId);
     }
 
     update(elementId, props) {

@@ -3,13 +3,27 @@ import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import ObjectFactory from './ObjectFactory.js';
 
 class SceneManager {
-    constructor(scene, eventDispatcher) {
+    constructor(scene, eventDispatcher, graphManager) {
         this.scene = scene;
         this.eventDispatcher = eventDispatcher;
-        this.elements = new Map(); // Unified map for both nodes and edges
+        this.graphManager = graphManager;
+        this.elements = new Map(); // Visual objects
         this.factory = new ObjectFactory(this.elements, this.eventDispatcher);
+
+        // Bind event handlers once
+        this._onNodeAddedHandler = this._onNodeAdded.bind(this);
+        this._onNodeRemovedHandler = this._onNodeRemoved.bind(this);
+        this._onEdgeAddedHandler = this._onEdgeAdded.bind(this);
+        this._onEdgeRemovedHandler = this._onEdgeRemoved.bind(this);
+
         this.hoverFrame = this.createHoverFrame();
         this.scene.add(this.hoverFrame);
+
+        // Subscribe to graph events
+        this.graphManager.addEventListener('node:added', this._onNodeAddedHandler);
+        this.graphManager.addEventListener('node:removed', this._onNodeRemovedHandler);
+        this.graphManager.addEventListener('edge:added', this._onEdgeAddedHandler);
+        this.graphManager.addEventListener('edge:removed', this._onEdgeRemovedHandler);
     }
 
     createHoverFrame() {
@@ -21,12 +35,27 @@ class SceneManager {
         return frame;
     }
 
-    add(element) {
+    _onNodeAdded({ node }) {
+        this._addElement(node);
+    }
+
+    _onEdgeAdded({ edge }) {
+        this._addElement(edge);
+    }
+
+    _onNodeRemoved({ nodeId }) {
+        this._removeElement(nodeId);
+    }
+
+    _onEdgeRemoved({ edgeId }) {
+        this._removeElement(edgeId);
+    }
+
+    _addElement(element) {
         if (this.elements.has(element.id)) {
             console.warn(`Element with ID ${element.id} already exists.`);
             return;
         }
-
         const object = this.factory.create(element);
         if (object) {
             this.elements.set(element.id, object);
@@ -34,8 +63,13 @@ class SceneManager {
         }
     }
 
-    remove(elementId) {
-        this._removeElement(elementId);
+    _removeElement(elementId) {
+        const object = this.elements.get(elementId);
+        if (!object) return;
+
+        this.scene.remove(object);
+        this._disposeObject(object);
+        this.elements.delete(elementId);
     }
 
     _disposeObject(object) {
@@ -45,26 +79,6 @@ class SceneManager {
             if (child.geometry) child.geometry.dispose();
             if (child.material) child.material.dispose();
         });
-    }
-
-    _removeElement(elementId) {
-        const object = this.elements.get(elementId);
-        if (!object) return;
-
-        // If it's a node, also remove connected edges
-        if (object.userData.type !== 'edge') {
-            const edgesToRemove = [];
-            this.elements.forEach((el, id) => {
-                if (el.userData.type === 'edge' && (el.userData.source === elementId || el.userData.target === elementId)) {
-                    edgesToRemove.push(id);
-                }
-            });
-            edgesToRemove.forEach(id => this._removeElement(id));
-        }
-
-        this.scene.remove(object);
-        this._disposeObject(object);
-        this.elements.delete(elementId);
     }
 
     update(elementId, props) {
@@ -149,10 +163,14 @@ class SceneManager {
     }
 
     destroy() {
-        // Use [...this.elements.keys()] to create a copy of keys,
-        // as the map will be modified during iteration by _removeElement.
-        [...this.elements.keys()].forEach(id => this._removeElement(id));
+        // Unsubscribe from graph events
+        this.graphManager.removeEventListener('node:added', this._onNodeAddedHandler);
+        this.graphManager.removeEventListener('node:removed',this._onNodeRemovedHandler);
+        this.graphManager.removeEventListener('edge:added', this._onEdgeAddedHandler);
+        this.graphManager.removeEventListener('edge:removed',this._onEdgeRemovedHandler);
 
+        // Clear scene
+        [...this.elements.keys()].forEach(id => this._removeElement(id));
         if (this.hoverFrame) {
             this._disposeObject(this.hoverFrame);
             this.scene.remove(this.hoverFrame);

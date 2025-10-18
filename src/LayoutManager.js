@@ -1,36 +1,71 @@
 import * as d3 from 'd3-force-3d';
 
 class LayoutManager {
-    constructor(nodes, edges, sceneManager) {
-        this.nodes = nodes;
-        this.edges = edges;
+    constructor(graphManager, sceneManager) {
+        this.graphManager = graphManager;
         this.sceneManager = sceneManager;
 
-        this.simulation = this.initSimulation();
+        // Bind event handlers once
+        this._onNodeAddedHandler = this._onNodeAdded.bind(this);
+        this._onNodeRemovedHandler = this._onNodeRemoved.bind(this);
+        this._onEdgeAddedHandler = this._onEdgeAdded.bind(this);
+        this._onEdgeRemovedHandler = this._onEdgeRemoved.bind(this);
+
+        this.simulation = this._initSimulation();
+
+        // Subscribe to graph events
+        this.graphManager.addEventListener('node:added', this._onNodeAddedHandler);
+        this.graphManager.addEventListener('node:removed', this._onNodeRemovedHandler);
+        this.graphManager.addEventListener('edge:added', this._onEdgeAddedHandler);
+        this.graphManager.addEventListener('edge:removed', this._onEdgeRemovedHandler);
     }
 
-    initSimulation() {
-        const simulation = d3.forceSimulation3d()
+    _initSimulation() {
+        const simulation = d3.forceSimulation()
             .numDimensions(3)
-            .nodes(this.nodes);
-
-        simulation
-            .force('link', d3.forceLink(this.edges).id(d => d.id).distance(10))
+            .force('link', d3.forceLink([]).id(d => d.id).distance(10))
             .force('charge', d3.forceManyBody().strength(-15))
             .force('center', d3.forceCenter(0, 0, 0))
-            .on('tick', this.ticked.bind(this));
-
+            .on('tick', this._onTick.bind(this));
         return simulation;
     }
 
-    ticked() {
-        // The simulation has updated the positions in the data.
-        // Now, update the visual representation in the SceneManager.
+    _updateSimulation() {
+        const nodes = this.graphManager.getNodes();
+        const edges = this.graphManager.getEdges();
+
+        this.simulation.nodes(nodes);
+        this.simulation.force('link').links(edges);
+        this.simulation.alpha(1).restart();
+    }
+
+    _onNodeAdded() {
+        this._updateSimulation();
+    }
+
+    _onNodeRemoved() {
+        this._updateSimulation();
+    }
+
+    _onEdgeAdded() {
+        this._updateSimulation();
+    }
+
+    _onEdgeRemoved() {
+        this._updateSimulation();
+    }
+
+    _onTick() {
         this.sceneManager.updateLayout(this.simulation.nodes());
     }
 
     destroy() {
         this.simulation.stop();
+        // Unsubscribe from graph events to prevent memory leaks
+        this.graphManager.removeEventListener('node:added', this._onNodeAddedHandler);
+        this.graphManager.removeEventListener('node:removed', this._onNodeRemovedHandler);
+        this.graphManager.removeEventListener('edge:added', this._onEdgeAddedHandler);
+        this.graphManager.removeEventListener('edge:removed', this._onEdgeRemovedHandler);
     }
 }
 
