@@ -3,28 +3,60 @@ import Renderer from './Renderer.js';
 import SceneManager from './SceneManager.js';
 import CameraManager from './CameraManager.js';
 import InteractionManager from './InteractionManager.js';
+import LayoutManager from './LayoutManager.js';
 
 class SpaceGraph extends THREE.EventDispatcher {
-    constructor(container, { elements = [], backgroundColor = 0x000000 } = {}) {
+    constructor(container, { elements = [], backgroundColor = 0x000000, bloom = {} } = {}) {
         super();
         const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.z = 35; // Zoom out to see the whole graph
 
         this.cameraManager = new CameraManager(camera, container);
-        this.renderer = new Renderer(container, camera);
+        this.renderer = new Renderer(container, camera, { bloom });
         this.renderer.setBackgroundColor(backgroundColor);
-        this.sceneManager = new SceneManager(this.renderer.getScene(), this); // Pass `this` as the event dispatcher
-        // InteractionManager should listen on the WebGL canvas, which is the base layer.
+        this.sceneManager = new SceneManager(this.renderer.getScene(), this);
         this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this);
 
+        // Process initial elements
+        const nodes = elements.filter(el => el.type !== 'edge');
+        const edges = elements.filter(el => el.type === 'edge');
 
-        // Initialize with a set of elements
-        elements.forEach(element => {
-            this.sceneManager.add(element);
+        nodes.forEach(node => this.sceneManager.addNode(node));
+        edges.forEach(edge => this.sceneManager.addEdge(edge));
+
+        // Initialize layout manager
+        this.layoutManager = new LayoutManager(
+            nodes,
+            edges,
+            this.onLayoutUpdate.bind(this)
+        );
+
+        this.start();
+    }
+
+    onLayoutUpdate() {
+        // Update node positions
+        this.layoutManager.simulation.nodes().forEach(nodeData => {
+            const nodeObject = this.sceneManager.nodes.get(nodeData.id);
+            if (nodeObject) {
+                nodeObject.position.set(nodeData.x, nodeData.y, nodeData.z);
+            }
         });
 
-        // Initial render
-        this.start();
+        // Update edge positions
+        this.sceneManager.edges.forEach(edge => {
+            const sourceNode = this.sceneManager.nodes.get(edge.userData.source);
+            const targetNode = this.sceneManager.nodes.get(edge.userData.target);
+            if (sourceNode && targetNode) {
+                const positions = edge.geometry.attributes.position;
+                positions.setXYZ(0, sourceNode.position.x, sourceNode.position.y, sourceNode.position.z);
+                positions.setXYZ(1, targetNode.position.x, targetNode.position.y, targetNode.position.z);
+                positions.needsUpdate = true;
+                if (edge.material.isLineDashedMaterial) {
+                    edge.computeLineDistances();
+                }
+            }
+        });
     }
 
     add(element) {

@@ -8,7 +8,6 @@ const initialElements = [
     {
         id: 'full-demo',
         type: 'html',
-        position: { x: -15, y: 5, z: 0 },
         htmlContent: `
             <div class="widget text-panel" style="width: 350px; pointer-events: auto;">
                 <h3>Full Demo</h3>
@@ -30,7 +29,6 @@ const initialElements = [
     {
         id: 'features',
         type: 'html',
-        position: { x: 10, y: 8, z: -10 },
         htmlContent: `
             <div class="widget" style="width: 200px; pointer-events: auto;">
                 <h3>Features ✨</h3>
@@ -42,7 +40,6 @@ const initialElements = [
     {
         id: 'style',
         type: 'html',
-        position: { x: 0, y: 0, z: 0 },
         htmlContent: `
             <div class="widget" style="padding: 0; background-color: transparent; pointer-events: auto;">
                 <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop" style="width: 300px; border-radius: 12px;">
@@ -53,7 +50,6 @@ const initialElements = [
     {
         id: 'technology',
         type: 'html',
-        position: { x: 5, y: -8, z: -5 },
         htmlContent: `
             <div class="widget" style="width: 180px; pointer-events: auto;">
                 <h3>Technology</h3>
@@ -63,7 +59,6 @@ const initialElements = [
     {
         id: 'interactive',
         type: 'html',
-        position: { x: 15, y: -5, z: 5 },
         htmlContent: `
             <div class="widget form-widget" style="width: 220px; pointer-events: auto;">
                 <h3>Interactive</h3>
@@ -75,7 +70,6 @@ const initialElements = [
     {
         id: 'data-source',
         type: 'html',
-        position: { x: -5, y: 10, z: -15 },
         htmlContent: `
             <div class="widget" style="width: 150px; text-align: center; pointer-events: auto;">
                  <p>Data Source</p>
@@ -86,7 +80,6 @@ const initialElements = [
      {
         id: 'another-node',
         type: 'html',
-        position: { x: -10, y: -8, z: 10 },
         htmlContent: `
             <div class="widget" style="width: 200px; pointer-events: auto;">
                 <h3>Another Node</h3>
@@ -108,6 +101,12 @@ const initialElements = [
 const graph = new SpaceGraph(container, {
     elements: initialElements,
     backgroundColor: 0x111111,
+    bloom: {
+        enabled: true,
+        strength: 0.8,
+        radius: 0.5,
+        threshold: 0.1
+    }
 });
 
 // Expose the graph class and instance to the window for easy debugging and testing

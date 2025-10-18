@@ -24,6 +24,7 @@
   "homepage": "https://github.com/automenta/spacegraphjs4#readme",
   "dependencies": {
     "@tweenjs/tween.js": "^25.0.0",
+    "d3-force-3d": "^3.0.6",
     "three": "^0.180.0"
   },
   "devDependencies": {

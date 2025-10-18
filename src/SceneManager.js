@@ -5,7 +5,8 @@ class SceneManager {
     constructor(scene, eventDispatcher) {
         this.scene = scene;
         this.eventDispatcher = eventDispatcher;
-        this.elements = new Map(); // Use a Map to store elements by ID
+        this.nodes = new Map(); // Use a Map to store nodes by ID
+        this.edges = new Map(); // Use a Map to store edges by ID
         this.hoverFrame = this.createHoverFrame();
         this.scene.add(this.hoverFrame);
     }
@@ -19,7 +20,7 @@ class SceneManager {
         return frame;
     }
 
-    createObject(element) {
+    createNode(element) {
         let object;
 
         switch (element.type) {
@@ -32,7 +33,6 @@ class SceneManager {
                 const scale = 0.01;
                 object.scale.set(scale, scale, scale);
 
-                // Add click listener directly here
                 div.addEventListener('click', (event) => {
                     event.stopPropagation();
                     this.eventDispatcher.dispatchEvent({ type: 'element:click', id: element.id });
@@ -54,40 +54,117 @@ class SceneManager {
             }
         }
 
-        object.position.set(element.position.x, element.position.y, element.position.z);
-        object.userData.id = element.id; // Store ID for identification
-        object.userData.type = element.type; // Store type for interaction logic
+        object.position.set(0, 0, 0); // Initialize at origin; layout manager will position it
+        object.userData.id = element.id;
+        object.userData.type = element.type;
         return object;
     }
 
-    add(element) {
-        if (this.elements.has(element.id)) {
-            console.warn(`Element with ID ${element.id} already exists. Use update() instead.`);
-            return;
+    createEdge(edgeData) {
+        const sourceNode = this.nodes.get(edgeData.source);
+        const targetNode = this.nodes.get(edgeData.target);
+
+        if (!sourceNode || !targetNode) {
+            console.warn(`Could not create edge "${edgeData.id}": source or target node not found.`);
+            return null;
         }
 
-        const object = this.createObject(element);
-        this.elements.set(element.id, object);
-        this.scene.add(object);
+        const points = [sourceNode.position, targetNode.position];
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+        const material = edgeData.dashed
+            ? new THREE.LineDashedMaterial({
+                  color: edgeData.color || 0xffffff,
+                  dashSize: 0.5,
+                  gapSize: 0.25,
+              })
+            : new THREE.LineBasicMaterial({ color: edgeData.color || 0xffffff });
+
+        const edgeLine = new THREE.Line(geometry, material);
+        if (edgeData.dashed) {
+            edgeLine.computeLineDistances();
+        }
+
+        edgeLine.userData.id = edgeData.id;
+        edgeLine.userData.source = edgeData.source;
+        edgeLine.userData.target = edgeData.target;
+
+        return edgeLine;
+    }
+
+    add(element) {
+        if (element.type === 'edge') {
+            this.addEdge(element);
+        } else {
+            this.addNode(element);
+        }
+    }
+
+    addNode(nodeData) {
+        if (this.nodes.has(nodeData.id)) {
+            console.warn(`Node with ID ${nodeData.id} already exists.`);
+            return;
+        }
+        const nodeObject = this.createNode(nodeData);
+        this.nodes.set(nodeData.id, nodeObject);
+        this.scene.add(nodeObject);
+    }
+
+    addEdge(edgeData) {
+        if (this.edges.has(edgeData.id)) {
+            console.warn(`Edge with ID ${edgeData.id} already exists.`);
+            return;
+        }
+        const edgeObject = this.createEdge(edgeData);
+        if (edgeObject) {
+            this.edges.set(edgeData.id, edgeObject);
+            this.scene.add(edgeObject);
+        }
     }
 
     remove(elementId) {
-        const object = this.elements.get(elementId);
+        if (this.nodes.has(elementId)) {
+            this.removeNode(elementId);
+        } else if (this.edges.has(elementId)) {
+            this.removeEdge(elementId);
+        }
+    }
+
+    removeNode(nodeId) {
+        const object = this.nodes.get(nodeId);
         if (object) {
             this.scene.remove(object);
             if (object.geometry) object.geometry.dispose();
             if (object.material) object.material.dispose();
-            // Also dispose of children's resources
             object.traverse(child => {
                 if (child.geometry) child.geometry.dispose();
                 if (child.material) child.material.dispose();
             });
-            this.elements.delete(elementId);
+            this.nodes.delete(nodeId);
+
+            // Also remove connected edges
+            const edgesToRemove = [];
+            this.edges.forEach(edge => {
+                if (edge.userData.source === nodeId || edge.userData.target === nodeId) {
+                    edgesToRemove.push(edge.userData.id);
+                }
+            });
+            edgesToRemove.forEach(edgeId => this.removeEdge(edgeId));
+        }
+    }
+
+    removeEdge(edgeId) {
+        const edge = this.edges.get(edgeId);
+        if (edge) {
+            this.scene.remove(edge);
+            if (edge.geometry) edge.geometry.dispose();
+            if (edge.material) edge.material.dispose();
+            this.edges.delete(edgeId);
         }
     }
 
     update(elementId, props) {
-        const object = this.elements.get(elementId);
+        const object = this.nodes.get(elementId);
         if (!object) {
             console.warn(`Element with ID ${elementId} not found.`);
             return;
@@ -95,20 +172,38 @@ class SceneManager {
 
         if (props.position) {
             object.position.set(props.position.x, props.position.y, props.position.z);
+            this.updateConnectedEdges(elementId);
         }
 
         if (props.color && object.material) {
             object.material.color.set(props.color);
         }
 
-        // Handle content updates for HTML elements
         if (props.htmlContent && object instanceof CSS3DObject) {
             object.element.innerHTML = props.htmlContent;
         }
     }
 
+    updateConnectedEdges(nodeId) {
+        this.edges.forEach(edge => {
+            if (edge.userData.source === nodeId || edge.userData.target === nodeId) {
+                const sourceNode = this.nodes.get(edge.userData.source);
+                const targetNode = this.nodes.get(edge.userData.target);
+                if (sourceNode && targetNode) {
+                    const positions = edge.geometry.attributes.position;
+                    positions.setXYZ(0, sourceNode.position.x, sourceNode.position.y, sourceNode.position.z);
+                    positions.setXYZ(1, targetNode.position.x, targetNode.position.y, targetNode.position.z);
+                    positions.needsUpdate = true;
+                    if (edge.material.isLineDashedMaterial) {
+                        edge.computeLineDistances();
+                    }
+                }
+            }
+        });
+    }
+
     setHovered(elementId, isHovered) {
-        const element = this.elements.get(elementId);
+        const element = this.nodes.get(elementId);
 
         if (!element) {
             this.hoverFrame.visible = false;
@@ -129,10 +224,9 @@ class SceneManager {
     }
 
     destroy() {
-        // Remove all elements and dispose of their resources
-        [...this.elements.keys()].forEach(id => this.remove(id));
+        [...this.nodes.keys()].forEach(id => this.removeNode(id));
+        [...this.edges.keys()].forEach(id => this.removeEdge(id));
 
-        // Clean up the hover frame itself
         if (this.hoverFrame) {
             if (this.hoverFrame.geometry) this.hoverFrame.geometry.dispose();
             if (this.hoverFrame.material) this.hoverFrame.material.dispose();

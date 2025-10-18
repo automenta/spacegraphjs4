@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 class Renderer {
-    constructor(container, camera) {
+    constructor(container, camera, options = {}) {
         this.container = container;
         this.scene = new THREE.Scene();
         this.camera = camera;
+        this.options = options;
 
         // WebGL Renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -14,12 +18,15 @@ class Renderer {
         this.cssRenderer = new CSS3DRenderer();
 
         this.setup();
+        this.setupPostprocessing();
     }
 
     setup() {
         // WebGL Renderer Setup
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         this.container.appendChild(this.renderer.domElement);
         this.renderer.domElement.style.position = 'absolute';
         this.renderer.domElement.style.top = 0;
@@ -36,16 +43,42 @@ class Renderer {
         window.addEventListener('resize', this.onWindowResize.bind(this));
     }
 
+    setupPostprocessing() {
+        const renderTarget = new THREE.WebGLRenderTarget(
+            this.container.clientWidth,
+            this.container.clientHeight,
+            {
+                format: THREE.RGBAFormat // Explicitly set format
+            }
+        );
+
+        this.composer = new EffectComposer(this.renderer, renderTarget);
+        const renderPass = new RenderPass(this.scene, this.camera);
+        this.composer.addPass(renderPass);
+
+        const bloomOptions = this.options.bloom;
+        if (bloomOptions && bloomOptions.enabled) {
+            this.bloomPass = new UnrealBloomPass(
+                new THREE.Vector2(this.container.clientWidth, this.container.clientHeight),
+                bloomOptions.strength || 1.5,
+                bloomOptions.radius || 0.4,
+                bloomOptions.threshold || 0.85
+            );
+            this.composer.addPass(this.bloomPass);
+        }
+    }
+
     onWindowResize() {
         this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
         this.cssRenderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        this.composer.setSize(this.container.clientWidth, this.container.clientHeight);
         this.render();
     }
 
     render() {
-        this.renderer.render(this.scene, this.camera);
+        this.composer.render();
         this.cssRenderer.render(this.scene, this.camera);
     }
 
