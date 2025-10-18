@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
 
 class CameraManager {
-    constructor(camera) {
+    constructor(camera, container) {
         this.camera = camera;
+        this.container = container;
         this.history = []; // Stack to store previous camera states
         this.isAnimating = false;
         // The point the camera is currently looking at
@@ -25,9 +26,12 @@ class CameraManager {
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        const padding = 1.2; // 20% padding
+        // For HTML elements, the size might be small in 3D units but large in pixels.
+        // A larger padding helps ensure the entire element is visible.
+        const isHtml = element.isCSS3DObject;
+        const padding = isHtml ? 1.5 : 1.2;
         const fov = this.camera.fov * (Math.PI / 180);
-        const aspect = this.camera.aspect;
+        const aspect = this.container.clientWidth / this.container.clientHeight;
 
         // Calculate the distance required to fit the object's height within the vertical FOV
         const distanceHeight = (size.y / 2) / Math.tan(fov / 2);

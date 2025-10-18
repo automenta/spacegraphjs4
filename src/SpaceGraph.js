@@ -5,13 +5,14 @@ import CameraManager from './CameraManager.js';
 import InteractionManager from './InteractionManager.js';
 
 class SpaceGraph extends THREE.EventDispatcher {
-    constructor(container, { elements = [] } = {}) {
+    constructor(container, { elements = [], backgroundColor = 0x000000 } = {}) {
         super();
         const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.z = 5;
+        camera.position.z = 35; // Zoom out to see the whole graph
 
-        this.cameraManager = new CameraManager(camera);
+        this.cameraManager = new CameraManager(camera, container);
         this.renderer = new Renderer(container, camera);
+        this.renderer.setBackgroundColor(backgroundColor);
         this.sceneManager = new SceneManager(this.renderer.getScene(), this); // Pass `this` as the event dispatcher
         // InteractionManager should listen on the WebGL canvas, which is the base layer.
         this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this);

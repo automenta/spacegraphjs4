@@ -5,11 +5,232 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SpaceGraph.js - AutoZoom Test</title>
     <style>
-        body { margin: 0; }
-        #spacegraph-container { width: 100vw; height: 100vh; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #111;
+            color: #eee;
+        }
+
+        #spacegraph-container {
+            position: absolute;
+            left: 300px;
+            top: 0;
+            width: calc(100vw - 300px);
+            height: 100vh;
+        }
+
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 100vh;
+            background-color: rgba(20, 20, 30, 0.85);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid #333;
+            box-sizing: border-box;
+            padding: 20px;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            color: #00ffff;
+            font-weight: 500;
+        }
+
+        .sidebar-content {
+            overflow-y: auto;
+        }
+
+        .sidebar-section .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-list li {
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .menu-list li.active {
+            background-color: #00ffff;
+            color: #111;
+            font-weight: bold;
+        }
+
+        .menu-list li:not(.active):hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .info-box {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .info-box p {
+            margin: 0 0 10px;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* General widget styling */
+        .widget {
+            background-color: rgba(30, 30, 45, 0.9);
+            border: 1px solid #555;
+            border-radius: 12px;
+            padding: 20px;
+            width: 300px;
+            box-sizing: border-box;
+            font-size: 14px;
+            color: #eee;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .widget h3 {
+            margin-top: 0;
+            color: #00ffff;
+            font-weight: 500;
+        }
+
+        /* Profile Card */
+        .profile-card {
+            text-align: center;
+        }
+        .profile-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid #00ffff;
+        }
+        .profile-card .name {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0 5px;
+        }
+        .profile-card .title {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        /* Form Widget */
+        .form-widget label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #aaa;
+        }
+        .form-widget input, .form-widget select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #eee;
+            box-sizing: border-box;
+        }
+        .form-widget input[type="range"] {
+            padding: 0;
+        }
+        .form-widget input[type="color"] {
+            padding: 2px;
+            height: 30px;
+        }
+        .form-widget button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background-color: #00ffff;
+            color: #111;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Bar Chart */
+        .chart-widget .chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 150px;
+            border-bottom: 1px solid #555;
+        }
+        .chart-widget .bar {
+            width: 20%;
+            background-color: #00ffff;
+            transition: height 0.3s ease;
+        }
+
+        /* Text Panel */
+        .text-panel {
+            height: 250px;
+            overflow-y: auto;
+        }
+        .text-panel p {
+            line-height: 1.6;
+        }
+        /* Custom scrollbar for webkit browsers */
+        .text-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        .text-panel::-webkit-scrollbar-track {
+            background: #222;
+        }
+        .text-panel::-webkit-scrollbar-thumb {
+            background-color: #555;
+            border-radius: 4px;
+        }
+
+        /* Video Player */
+        .video-widget video {
+            width: 100%;
+            border-radius: 8px;
+        }
+
     </style>
 </head>
 <body>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2>SpaceGraph.js</h2>
+        </div>
+        <div class="sidebar-content">
+            <div class="sidebar-section">
+                <div class="section-title">Demo</div>
+                <ul class="menu-list">
+                    <li class="active">Full Demo</li>
+                    <li>Advanced Camera Controls</li>
+                    <li>Advanced Layout Systems</li>
+                    <li>Comprehensive Edge Features</li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <div class="section-title">Camera Modes Info</div>
+                <div class="info-box">
+                    <p><strong>Full Demo</strong></p>
+                    <p>This is the original demonstration graph showcasing a variety of node types, edge styles, and interactions available in SpaceGraph.js.</p>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="spacegraph-container"></div>
     <script type="module" src="/main.js"></script>
 </body>

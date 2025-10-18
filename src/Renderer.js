@@ -53,6 +53,10 @@ class Renderer {
         return this.scene;
     }
 
+    setBackgroundColor(color) {
+        this.scene.background = new THREE.Color(color);
+    }
+
     setAnimationLoop(callback) {
         this.renderer.setAnimationLoop(callback);
     }
