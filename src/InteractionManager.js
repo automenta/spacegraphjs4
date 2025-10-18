@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 
 class InteractionManager {
-    constructor(camera, canvas, sceneManager, graph) { // graph is the eventDispatcher and public API
+    constructor(camera, canvas, sceneManager, graph, config) { // graph is the eventDispatcher and public API
         this.camera = camera;
         this.canvas = canvas;
         this.sceneManager = sceneManager;
         this.graph = graph;
+        this.config = config.interactions;
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredElementId = null;
@@ -35,13 +36,24 @@ class InteractionManager {
     }
 
     onCanvasClick(event) {
-        if (!this.hoveredElementId) return;
+        if (!this.hoveredElementId) {
+            if (this.focusedElementId) {
+                this.graph.dispatchEvent({ type: 'defocus' });
+                this.focusedElementId = null;
+            }
+            return;
+        }
 
         this.graph.dispatchEvent({ type: 'element:click', id: this.hoveredElementId });
 
         const isFocused = this.hoveredElementId === this.focusedElementId;
-        this.focusedElementId = isFocused ? null : this.hoveredElementId;
-        isFocused ? this.graph.goBack() : this.graph.flyTo(this.hoveredElementId);
+        if (isFocused) {
+            this.graph.dispatchEvent({ type: 'defocus' });
+            this.focusedElementId = null;
+        } else {
+            this.focusedElementId = this.hoveredElementId;
+            this.graph.dispatchEvent({ type: 'focus', id: this.focusedElementId });
+        }
     }
 
     setHovered(elementId) {

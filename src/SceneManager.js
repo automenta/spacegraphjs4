@@ -3,13 +3,20 @@ import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import ObjectFactory from './ObjectFactory.js';
 
 class SceneManager {
-    constructor(scene, eventDispatcher) {
+    constructor(scene, graphManager, eventDispatcher, config) {
         this.scene = scene;
+        this.graphManager = graphManager;
         this.eventDispatcher = eventDispatcher;
-        this.elements = new Map(); // Unified map for both nodes and edges
-        this.factory = new ObjectFactory(this.elements, this.eventDispatcher);
+        this.config = config;
+        this.elements = new Map();
+        this.factory = new ObjectFactory(this.elements, this.eventDispatcher, config.objects);
         this.hoverFrame = this.createHoverFrame();
         this.scene.add(this.hoverFrame);
+
+        this.graphManager.addEventListener('node:added', ({ node }) => this.add(node));
+        this.graphManager.addEventListener('edge:added', ({ edge }) => this.add(edge));
+        this.graphManager.addEventListener('node:removed', ({ node }) => this.remove(node.id));
+        this.graphManager.addEventListener('edge:removed', ({ edge }) => this.remove(edge.id));
     }
 
     createHoverFrame() {
@@ -35,36 +42,33 @@ class SceneManager {
     }
 
     remove(elementId) {
-        this._removeElement(elementId);
-    }
-
-    _disposeObject(object) {
-        if (object.geometry) object.geometry.dispose();
-        if (object.material) object.material.dispose();
-        object.traverse(child => {
-            if (child.geometry) child.geometry.dispose();
-            if (child.material) child.material.dispose();
-        });
-    }
-
-    _removeElement(elementId) {
         const object = this.elements.get(elementId);
         if (!object) return;
-
-        // If it's a node, also remove connected edges
-        if (object.userData.type !== 'edge') {
-            const edgesToRemove = [];
-            this.elements.forEach((el, id) => {
-                if (el.userData.type === 'edge' && (el.userData.source === elementId || el.userData.target === elementId)) {
-                    edgesToRemove.push(id);
-                }
-            });
-            edgesToRemove.forEach(id => this._removeElement(id));
-        }
 
         this.scene.remove(object);
         this._disposeObject(object);
         this.elements.delete(elementId);
+    }
+
+    _disposeObject(object) {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+            if (Array.isArray(object.material)) {
+                object.material.forEach(material => material.dispose());
+            } else {
+                object.material.dispose();
+            }
+        }
+        object.traverse(child => {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(material => material.dispose());
+                } else {
+                    child.material.dispose();
+                }
+            }
+        });
     }
 
     update(elementId, props) {
@@ -149,14 +153,14 @@ class SceneManager {
     }
 
     destroy() {
-        // Use [...this.elements.keys()] to create a copy of keys,
-        // as the map will be modified during iteration by _removeElement.
-        [...this.elements.keys()].forEach(id => this._removeElement(id));
+        [...this.elements.keys()].forEach(id => this.remove(id));
 
         if (this.hoverFrame) {
             this._disposeObject(this.hoverFrame);
             this.scene.remove(this.hoverFrame);
         }
+
+        // Unsubscribe from graphManager events
     }
 }
 

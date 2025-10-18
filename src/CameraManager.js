@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
 
 class CameraManager {
-    constructor(camera, container) {
+    constructor(camera, container, config) {
         this.camera = camera;
         this.container = container;
+        this.config = config.camera;
         this.history = []; // Stack to store previous camera states
         this.isAnimating = false;
         // The point the camera is currently looking at
@@ -48,20 +49,21 @@ class CameraManager {
     animateCamera(targetPosition, targetLookAt) {
         this.isAnimating = true;
 
+        const { duration, easing } = this.config.flyTo;
+        const easingFunction = TWEEN.Easing[easing.split('.')[0]][easing.split('.')[1]];
+
         const currentPosition = this.camera.position.clone();
         const currentLookAt = this.currentTarget.clone();
 
         new TWEEN.Tween(currentPosition)
-            .to(targetPosition, 500)
-            .easing(TWEEN.Easing.Quadratic.InOut)
-            .onUpdate(() => {
-                this.camera.position.copy(currentPosition);
-            })
+            .to(targetPosition, duration)
+            .easing(easingFunction)
+            .onUpdate(() => this.camera.position.copy(currentPosition))
             .start();
 
         new TWEEN.Tween(currentLookAt)
-            .to(targetLookAt, 500)
-            .easing(TWEEN.Easing.Quadratic.InOut)
+            .to(targetLookAt, duration)
+            .easing(easingFunction)
             .onUpdate(() => {
                 this.camera.lookAt(currentLookAt);
                 this.currentTarget.copy(currentLookAt);

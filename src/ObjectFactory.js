@@ -2,57 +2,60 @@ import * as THREE from 'three';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 
 class ObjectFactory {
-    constructor(elements, eventDispatcher) {
+    constructor(elements, eventDispatcher, config) {
         this.elements = elements;
         this.eventDispatcher = eventDispatcher;
+        this.config = config;
+
+        this.nodeCreators = {
+            box: this._createBox,
+            sphere: this._createSphere,
+            html: this._createHtml,
+        };
     }
 
     create(element) {
-        switch (element.type) {
-            case 'edge':
-                return this._createEdge(element);
-            case 'html':
-            case 'sphere':
-            case 'box':
-                return this._createNode(element);
-            default:
-                console.warn(`Unknown element type: ${element.type}`);
-                return null;
+        if (element.type === 'edge') {
+            return this._createEdge(element);
         }
+
+        const creator = this.nodeCreators[element.type];
+        if (!creator) {
+            console.warn(`Unknown element type: ${element.type}`);
+            return null;
+        }
+
+        const object = creator.call(this, element);
+        object.userData = { id: element.id, type: element.type };
+        return object;
     }
 
-    _createNode(element) {
-        const { id, type, color = 0xffffff, size = 1, htmlContent = '' } = element;
-        let object, geometry, material;
+    _createBox(element) {
+        const { color, size } = { ...this.config.defaults, ...element };
+        const geometry = new THREE.BoxGeometry(size, size, size);
+        const material = new THREE.MeshBasicMaterial({ color });
+        return new THREE.Mesh(geometry, material);
+    }
 
-        switch (type) {
-            case 'html': {
-                const div = document.createElement('div');
-                div.innerHTML = htmlContent;
-                div.style.pointerEvents = 'auto';
-                div.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    this.eventDispatcher.dispatchEvent({ type: 'element:click', id });
-                });
-                object = new CSS3DObject(div);
-                const scale = 0.01;
-                object.scale.set(scale, scale, scale);
-                break;
-            }
-            case 'sphere':
-                geometry = new THREE.SphereGeometry(size, 32, 32);
-                material = new THREE.MeshBasicMaterial({ color });
-                object = new THREE.Mesh(geometry, material);
-                break;
-            case 'box':
-            default:
-                geometry = new THREE.BoxGeometry(size, size, size);
-                material = new THREE.MeshBasicMaterial({ color });
-                object = new THREE.Mesh(geometry, material);
-                break;
-        }
+    _createSphere(element) {
+        const { color, size } = { ...this.config.defaults, ...element };
+        const geometry = new THREE.SphereGeometry(size, 32, 32);
+        const material = new THREE.MeshBasicMaterial({ color });
+        return new THREE.Mesh(geometry, material);
+    }
 
-        object.userData = { id, type };
+    _createHtml(element) {
+        const { id, htmlContent } = { ...this.config.defaults, ...element };
+        const div = document.createElement('div');
+        div.innerHTML = htmlContent;
+        div.style.pointerEvents = 'auto';
+        div.addEventListener('click', (event) => {
+            event.stopPropagation();
+            this.eventDispatcher.dispatchEvent({ type: 'element:click', id });
+        });
+        const object = new CSS3DObject(div);
+        const scale = 0.01;
+        object.scale.set(scale, scale, scale);
         return object;
     }
 
@@ -68,22 +71,18 @@ class ObjectFactory {
         const points = [sourceNode.position, targetNode.position];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
-        const material = edgeData.dashed
-            ? new THREE.LineDashedMaterial({
-                  color: edgeData.color || 0xffffff,
-                  dashSize: 0.5,
-                  gapSize: 0.25,
-              })
-            : new THREE.LineBasicMaterial({ color: edgeData.color || 0xffffff });
+        const { color, dashed, dashSize, gapSize } = { ...this.config.defaults, ...this.config.edge, ...edgeData };
+
+        const material = dashed
+            ? new THREE.LineDashedMaterial({ color, dashSize, gapSize })
+            : new THREE.LineBasicMaterial({ color });
 
         const edgeLine = new THREE.Line(geometry, material);
-        if (edgeData.dashed) {
+        if (dashed) {
             edgeLine.computeLineDistances();
         }
 
-        edgeLine.userData.id = edgeData.id;
-        edgeLine.userData.source = edgeData.source;
-        edgeLine.userData.target = edgeData.target;
+        edgeLine.userData = { id: edgeData.id, type: 'edge', source: edgeData.source, target: edgeData.target };
 
         return edgeLine;
     }

@@ -4,40 +4,54 @@ import SceneManager from './SceneManager.js';
 import CameraManager from './CameraManager.js';
 import InteractionManager from './InteractionManager.js';
 import LayoutManager from './LayoutManager.js';
+import GraphManager from './GraphManager.js';
+import { mergeConfig } from './Config.js';
 
 class SpaceGraph extends THREE.EventDispatcher {
-    constructor(container, { elements = [], backgroundColor = 0x000000, bloom = {} } = {}) {
+    constructor(container, userConfig = {}) {
         super();
-        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.z = 35; // Zoom out to see the whole graph
+        const config = mergeConfig(userConfig);
 
-        this.cameraManager = new CameraManager(camera, container);
-        this.renderer = new Renderer(container, camera, { bloom });
-        this.renderer.setBackgroundColor(backgroundColor);
-        this.sceneManager = new SceneManager(this.renderer.getScene(), this);
-        this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this);
+        this.graphManager = new GraphManager(config.graph.elements);
 
-        // Process initial elements
-        // Add nodes first, then edges
-        elements.filter(el => el.type !== 'edge').forEach(node => this.sceneManager.add(node));
-        elements.filter(el => el.type === 'edge').forEach(edge => this.sceneManager.add(edge));
-
-        // Initialize layout manager
-        this.layoutManager = new LayoutManager(
-            elements.filter(el => el.type !== 'edge'),
-            elements.filter(el => el.type === 'edge'),
-            this.sceneManager // Pass the sceneManager instance
+        const camera = new THREE.PerspectiveCamera(
+            config.camera.fov,
+            container.clientWidth / container.clientHeight,
+            config.camera.near,
+            config.camera.far
         );
+        camera.position.set(config.camera.position.x, config.camera.position.y, config.camera.position.z);
+
+        this.cameraManager = new CameraManager(camera, container, config);
+        this.renderer = new Renderer(container, camera, config);
+        this.sceneManager = new SceneManager(this.renderer.getScene(), this.graphManager, this, config);
+        this.layoutManager = new LayoutManager(this.graphManager, this.sceneManager, config);
+        this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this, config);
 
         this.start();
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        this.on('focus', (event) => this.flyTo(event.id));
+        this.on('defocus', () => this.goBack());
     }
 
     add(element) {
-        this.sceneManager.add(element);
+        if (element.type === 'edge') {
+            this.graphManager.addEdge(element);
+        } else {
+            this.graphManager.addNode(element);
+        }
     }
 
     remove(elementId) {
-        this.sceneManager.remove(elementId);
+        // Check if it's a node or an edge and call the appropriate method
+        if (this.graphManager.nodes.has(elementId)) {
+            this.graphManager.removeNode(elementId);
+        } else if (this.graphManager.edges.has(elementId)) {
+            this.graphManager.removeEdge(elementId);
+        }
     }
 
     update(elementId, props) {

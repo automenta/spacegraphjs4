@@ -5,11 +5,11 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 class Renderer {
-    constructor(container, camera, options = {}) {
+    constructor(container, camera, config) {
         this.container = container;
         this.scene = new THREE.Scene();
         this.camera = camera;
-        this.options = options;
+        this.config = config;
 
         // WebGL Renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -19,6 +19,7 @@ class Renderer {
 
         this.setup();
         this.setupPostprocessing();
+        this.setBackgroundColor(this.config.graph.backgroundColor);
     }
 
     setup() {
@@ -56,13 +57,13 @@ class Renderer {
         const renderPass = new RenderPass(this.scene, this.camera);
         this.composer.addPass(renderPass);
 
-        const bloomOptions = this.options.bloom;
-        if (bloomOptions && bloomOptions.enabled) {
+        const bloomConfig = this.config.renderer.bloom;
+        if (bloomConfig.enabled) {
             this.bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(this.container.clientWidth, this.container.clientHeight),
-                bloomOptions.strength || 1.5,
-                bloomOptions.radius || 0.4,
-                bloomOptions.threshold || 0.85
+                bloomConfig.strength,
+                bloomConfig.radius,
+                bloomConfig.threshold
             );
             this.composer.addPass(this.bloomPass);
         }
