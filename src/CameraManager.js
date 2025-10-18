@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
 
 class CameraManager {
-    constructor(camera, container) {
+    constructor(camera, domElement) {
         this.camera = camera;
-        this.container = container;
+        this.domElement = domElement;
         this.history = []; // Stack to store previous camera states
         this.isAnimating = false;
         // The point the camera is currently looking at

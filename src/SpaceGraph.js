@@ -7,17 +7,18 @@ import LayoutManager from './LayoutManager.js';
 import GraphManager from './GraphManager.js';
 
 class SpaceGraph extends THREE.EventDispatcher {
-    constructor(container, { elements = [], backgroundColor = 0x000000, bloom = {} } = {}) {
+    constructor({ container, elements = [], backgroundColor = 0x000000, bloom = {} } = {}) {
         super();
         const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.z = 35; // Zoom out to see the whole graph
 
         this.graphManager = new GraphManager();
-        this.cameraManager = new CameraManager(camera, container);
         this.renderer = new Renderer(container, camera, { bloom });
         this.renderer.setBackgroundColor(backgroundColor);
+
         this.sceneManager = new SceneManager(this.renderer.getScene(), this, this.graphManager);
-        this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this);
+        this.cameraManager = new CameraManager(camera, this.renderer.getDomElement());
+        this.interactionManager = new InteractionManager(camera, this.renderer.getDomElement(), this.sceneManager, this);
         this.layoutManager = new LayoutManager(this.graphManager, this.sceneManager);
 
         // Process initial elements

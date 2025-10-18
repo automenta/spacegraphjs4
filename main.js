@@ -98,7 +98,8 @@ const initialElements = [
 ];
 
 // Create the SpaceGraph instance
-const graph = new SpaceGraph(container, {
+const graph = new SpaceGraph({
+    container,
     elements: initialElements,
     backgroundColor: 0x111111,
     bloom: {
@@ -108,10 +109,6 @@ const graph = new SpaceGraph(container, {
         threshold: 0.1
     }
 });
-
-// Expose the graph class and instance to the window for easy debugging and testing
-window.SpaceGraph = SpaceGraph;
-window.graph = graph;
 
 // Expose the graph class and instance to the window for easy debugging and testing
 window.SpaceGraph = SpaceGraph;

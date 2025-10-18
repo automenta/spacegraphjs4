@@ -86,6 +86,10 @@ class Renderer {
         return this.scene;
     }
 
+    getDomElement() {
+        return this.cssRenderer.domElement;
+    }
+
     setBackgroundColor(color) {
         this.scene.background = new THREE.Color(color);
     }

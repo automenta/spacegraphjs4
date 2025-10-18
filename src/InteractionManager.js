@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 
 class InteractionManager {
-    constructor(camera, canvas, sceneManager, graph) { // graph is the eventDispatcher and public API
+    constructor(camera, domElement, sceneManager, graph) { // graph is the eventDispatcher and public API
         this.camera = camera;
-        this.canvas = canvas;
+        this.domElement = domElement;
         this.sceneManager = sceneManager;
         this.graph = graph;
         this.raycaster = new THREE.Raycaster();
@@ -14,13 +14,13 @@ class InteractionManager {
         this.onMouseMove = this.onMouseMove.bind(this);
         this.onCanvasClick = this.onCanvasClick.bind(this);
 
-        this.canvas.addEventListener('mousemove', this.onMouseMove, false);
-        this.canvas.addEventListener('click', this.onCanvasClick, false);
+        this.domElement.addEventListener('mousemove', this.onMouseMove, false);
+        this.domElement.addEventListener('click', this.onCanvasClick, false);
     }
 
     onMouseMove(event) {
-        this.mouse.x = (event.clientX / this.canvas.clientWidth) * 2 - 1;
-        this.mouse.y = -(event.clientY / this.canvas.clientHeight) * 2 + 1;
+        this.mouse.x = (event.clientX / this.domElement.clientWidth) * 2 - 1;
+        this.mouse.y = -(event.clientY / this.domElement.clientHeight) * 2 + 1;
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
         const intersects = this.raycaster.intersectObjects([...this.sceneManager.elements.values()]);
@@ -59,8 +59,8 @@ class InteractionManager {
     }
 
     destroy() {
-        this.canvas.removeEventListener('mousemove', this.onMouseMove);
-        this.canvas.removeEventListener('click', this.onCanvasClick);
+        this.domElement.removeEventListener('mousemove', this.onMouseMove);
+        this.domElement.removeEventListener('click', this.onCanvasClick);
     }
 }
 
