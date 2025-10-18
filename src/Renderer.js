@@ -30,7 +30,8 @@ class Renderer {
         this.container.appendChild(this.cssRenderer.domElement);
         this.cssRenderer.domElement.style.position = 'absolute';
         this.cssRenderer.domElement.style.top = 0;
-        this.cssRenderer.domElement.style.zIndex = 1; // Ensure CSS3D is on top
+        this.cssRenderer.domElement.style.zIndex = 1; // CSS layer on top
+        this.cssRenderer.domElement.style.pointerEvents = 'none'; // Let clicks pass through to the canvas
 
         window.addEventListener('resize', this.onWindowResize.bind(this));
     }

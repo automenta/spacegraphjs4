@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceGraph.js Example</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        #graph-container { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="graph-container"></div>
+
+    <!-- 1. Include THREE.js -->
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+
+    <!-- 2. Include the SpaceGraph.js library -->
+    <script src="./dist/spacegraph.umd.js"></script>
+
+    <script>
+        // 3. Your code starts here
+        const container = document.getElementById('graph-container');
+
+        const myElements = [
+            { id: 'hello', type: 'box', position: { x: -3, y: 0, z: 0 }, color: 0x00ff00, size: 1.5 },
+            { id: 'world', type: 'sphere', position: { x: 3, y: 0, z: 0 }, color: 0xff00ff, size: 1 },
+            { id: 'intro-text', type: 'html', position: { x: 0, y: 1.5, z: 0 }, htmlContent: '<div style="color: white; font-size: 24px; font-family: sans-serif;">Welcome to SpaceGraph.js!</div>' }
+        ];
+
+        // Instantiate the graph
+        const graph = new SpaceGraph(container, { elements: myElements });
+
+        // The library handles click-to-zoom automatically for geometric objects.
+        // You can still listen for the event if you want to perform other actions.
+        graph.on('element:click', (e) => {
+            console.log(`Element clicked: ${e.id}`);
+        });
+    </script>
+</body>
+</html>

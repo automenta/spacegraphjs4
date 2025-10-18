@@ -12,8 +12,9 @@ class SpaceGraph extends THREE.EventDispatcher {
 
         this.cameraManager = new CameraManager(camera);
         this.renderer = new Renderer(container, camera);
-        this.sceneManager = new SceneManager(this.renderer.getScene());
-        this.interactionManager = new InteractionManager(camera, this.renderer.cssRenderer.domElement, this.sceneManager, this.cameraManager, this);
+        this.sceneManager = new SceneManager(this.renderer.getScene(), this); // Pass `this` as the event dispatcher
+        // InteractionManager should listen on the WebGL canvas, which is the base layer.
+        this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this);
 
 
         // Initialize with a set of elements
@@ -37,6 +38,13 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.sceneManager.update(elementId, props);
     }
 
+    flyTo(elementId) {
+        const element = this.sceneManager.elements.get(elementId);
+        if (element) {
+            this.cameraManager.flyTo(element);
+        }
+    }
+
     goBack() {
         this.cameraManager.goBack();
     }
@@ -50,13 +58,23 @@ class SpaceGraph extends THREE.EventDispatcher {
     }
 
     destroy() {
+        // 1. Stop the animation loop
         this.renderer.setAnimationLoop(null);
-        this.renderer.destroy();
+
+        // 2. Clean up managers
         this.interactionManager.destroy();
-        // Clear all elements from the scene
-        [...this.sceneManager.elements.keys()].forEach(id => this.sceneManager.remove(id));
-        // Remove all event listeners
-        this.removeEventListener();
+        this.sceneManager.destroy(); // Will clear the scene and dispose objects
+
+        // 3. Destroy the renderer and remove its canvas
+        this.renderer.destroy();
+
+        // 4. Remove all event listeners from the SpaceGraph instance itself
+        // The _listeners property is an internal detail of THREE.EventDispatcher
+        if (this._listeners) {
+            Object.keys(this._listeners).forEach(type => {
+                delete this._listeners[type];
+            });
+        }
     }
 
     // Alias for addEventListener

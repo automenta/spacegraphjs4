@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 
 class SceneManager {
-    constructor(scene) {
+    constructor(scene, eventDispatcher) {
         this.scene = scene;
+        this.eventDispatcher = eventDispatcher;
         this.elements = new Map(); // Use a Map to store elements by ID
         this.hoverFrame = this.createHoverFrame();
         this.scene.add(this.hoverFrame);
@@ -19,45 +20,44 @@ class SceneManager {
     }
 
     createObject(element) {
-        // Create the base geometric mesh
-        const material = new THREE.MeshBasicMaterial({ color: element.color || 0xffffff });
-        let geometry;
+        let object;
+
         switch (element.type) {
-            case 'sphere':
-                geometry = new THREE.SphereGeometry(element.size || 1, 32, 32);
+            case 'html': {
+                const div = document.createElement('div');
+                div.innerHTML = element.htmlContent || '';
+                div.style.pointerEvents = 'auto'; // Crucial for allowing clicks
+
+                object = new CSS3DObject(div);
+                const scale = 0.01;
+                object.scale.set(scale, scale, scale);
+
+                // Add click listener directly here
+                div.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    this.eventDispatcher.dispatchEvent({ type: 'element:click', id: element.id });
+                });
                 break;
+            }
+            case 'sphere': {
+                const material = new THREE.MeshBasicMaterial({ color: element.color || 0xffffff });
+                const geometry = new THREE.SphereGeometry(element.size || 1, 32, 32);
+                object = new THREE.Mesh(geometry, material);
+                break;
+            }
             case 'box':
-            default:
-                geometry = new THREE.BoxGeometry(element.size || 1, element.size || 1, element.size || 1);
+            default: {
+                const material = new THREE.MeshBasicMaterial({ color: element.color || 0xffffff });
+                const geometry = new THREE.BoxGeometry(element.size || 1, element.size || 1, element.size || 1);
+                object = new THREE.Mesh(geometry, material);
                 break;
-        }
-        const mesh = new THREE.Mesh(geometry, material);
-
-        // If htmlContent is provided, create a CSS3DObject and attach it to the mesh
-        if (element.htmlContent) {
-            const div = document.createElement('div');
-            div.innerHTML = element.htmlContent;
-            // Basic styling for visibility
-            div.style.backgroundColor = 'rgba(0,0,0,0.5)';
-            div.style.padding = '10px';
-            div.style.color = 'white';
-            div.style.borderRadius = '5px';
-
-            const htmlObject = new CSS3DObject(div);
-            // Position the HTML element slightly in front of the mesh face
-            htmlObject.position.z = (element.size || 1) / 2 + 0.01;
-
-            // Scale the HTML object down to an appropriate size for the 3D scene
-            const scale = 0.01;
-            htmlObject.scale.set(scale, scale, scale);
-
-            mesh.add(htmlObject);
+            }
         }
 
-        mesh.position.set(element.position.x, element.position.y, element.position.z);
-        mesh.userData.id = element.id; // Store ID for raycasting
-        mesh.userData.type = element.type; // Store type for hover logic
-        return mesh;
+        object.position.set(element.position.x, element.position.y, element.position.z);
+        object.userData.id = element.id; // Store ID for identification
+        object.userData.type = element.type; // Store type for interaction logic
+        return object;
     }
 
     add(element) {
@@ -101,12 +101,9 @@ class SceneManager {
             object.material.color.set(props.color);
         }
 
-        if (props.htmlContent) {
-            // Find and update the CSS3DObject child
-            const htmlChild = object.children.find(child => child instanceof CSS3DObject);
-            if (htmlChild) {
-                htmlChild.element.innerHTML = props.htmlContent;
-            }
+        // Handle content updates for HTML elements
+        if (props.htmlContent && object instanceof CSS3DObject) {
+            object.element.innerHTML = props.htmlContent;
         }
     }
 
@@ -128,6 +125,18 @@ class SceneManager {
             this.hoverFrame.visible = true;
         } else {
             this.hoverFrame.visible = false;
+        }
+    }
+
+    destroy() {
+        // Remove all elements and dispose of their resources
+        [...this.elements.keys()].forEach(id => this.remove(id));
+
+        // Clean up the hover frame itself
+        if (this.hoverFrame) {
+            if (this.hoverFrame.geometry) this.hoverFrame.geometry.dispose();
+            if (this.hoverFrame.material) this.hoverFrame.material.dispose();
+            this.scene.remove(this.hoverFrame);
         }
     }
 }

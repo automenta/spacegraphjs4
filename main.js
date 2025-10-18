@@ -13,7 +13,8 @@ const initialElements = [
 // Create the SpaceGraph instance
 const graph = new SpaceGraph(container, { elements: initialElements });
 
-// Expose the graph instance to the window for easy debugging
+// Expose the graph class and instance to the window for easy debugging and testing
+window.SpaceGraph = SpaceGraph;
 window.graph = graph;
 
 // Test the event listener

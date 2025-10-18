@@ -2,9 +2,11 @@
   "name": "app",
   "version": "1.0.0",
   "description": "This plan is the definitive roadmap for building and shipping **SpaceGraph.js v1.0**. Its sole purpose is to produce a stable, minimal, and shippable Zooming User Interface (ZUI) library. The central interaction paradigm is **AutoZoom**, and all development effort will be directed toward perfecting this core experience.",
-  "main": "index.js",
+  "main": "./dist/spacegraph.umd.js",
+  "module": "./dist/spacegraph.es.js",
   "scripts": {
     "dev": "vite",
+    "build": "vite build",
     "test": "jest",
     "test:e2e": "jest"
   },

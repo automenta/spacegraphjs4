@@ -1,22 +1,21 @@
 import * as THREE from 'three';
 
 class InteractionManager {
-    constructor(camera, canvas, sceneManager, cameraManager, eventDispatcher) {
+    constructor(camera, canvas, sceneManager, graph) { // graph is the eventDispatcher and public API
         this.camera = camera;
         this.canvas = canvas;
         this.sceneManager = sceneManager;
-        this.cameraManager = cameraManager;
-        this.eventDispatcher = eventDispatcher; // To dispatch events like 'element:click'
+        this.graph = graph;
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredElementId = null;
-        this.focusedElementId = null; // The element the camera is currently focused on
+        this.focusedElementId = null;
 
         this.onMouseMove = this.onMouseMove.bind(this);
-        this.onClick = this.onClick.bind(this);
+        this.onCanvasClick = this.onCanvasClick.bind(this);
 
         this.canvas.addEventListener('mousemove', this.onMouseMove, false);
-        this.canvas.addEventListener('click', this.onClick, false);
+        this.canvas.addEventListener('click', this.onCanvasClick, false);
     }
 
     onMouseMove(event) {
@@ -30,29 +29,36 @@ class InteractionManager {
 
         if (intersects.length > 0) {
             const intersectedObject = intersects[0].object;
+            // IMPORTANT: Ignore 'html' type for hover-framing, as per requirements.
+            if (intersectedObject.userData.type === 'html') {
+                this.setHovered(null);
+                return;
+            }
+
             const elementId = intersectedObject.userData.id;
             if (this.hoveredElementId !== elementId) {
-                this.setHovered(elementId, intersectedObject);
+                this.setHovered(elementId);
             }
         } else {
             if (this.hoveredElementId !== null) {
-                this.setHovered(null, null);
+                this.setHovered(null);
             }
         }
     }
 
-    onClick(event) {
+    onCanvasClick(event) {
+        // This handles clicks on the canvas for geometric objects
         if (this.hoveredElementId) {
-            // Dispatch a generic click event with the element's ID
-            this.eventDispatcher.dispatchEvent({ type: 'element:click', id: this.hoveredElementId });
-
             const element = this.sceneManager.elements.get(this.hoveredElementId);
-            if (element) {
+            if (element && element.userData.type !== 'html') {
+                // Dispatch a generic click event with the element's ID
+                this.graph.dispatchEvent({ type: 'element:click', id: this.hoveredElementId });
+
                 if (this.hoveredElementId === this.focusedElementId) {
-                    this.cameraManager.goBack();
+                    this.graph.goBack();
                     this.focusedElementId = null; // Clear focus
                 } else {
-                    this.cameraManager.flyTo(element);
+                    this.graph.flyTo(this.hoveredElementId);
                     this.focusedElementId = this.hoveredElementId; // Set new focus
                 }
             }
@@ -74,8 +80,8 @@ class InteractionManager {
     }
 
     destroy() {
-        this.canvas.removeEventListener('mousemove', this.onMouseMove.bind(this));
-        this.canvas.removeEventListener('click', this.onClick.bind(this));
+        this.canvas.removeEventListener('mousemove', this.onMouseMove);
+        this.canvas.removeEventListener('click', this.onCanvasClick);
     }
 }
 
