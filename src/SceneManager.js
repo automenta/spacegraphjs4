@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+import ObjectFactory from './ObjectFactory.js';
 
 class SceneManager {
     constructor(scene, eventDispatcher) {
         this.scene = scene;
         this.eventDispatcher = eventDispatcher;
-        this.nodes = new Map(); // Use a Map to store nodes by ID
-        this.edges = new Map(); // Use a Map to store edges by ID
+        this.elements = new Map(); // Unified map for both nodes and edges
+        this.factory = new ObjectFactory(this.elements, this.eventDispatcher);
         this.hoverFrame = this.createHoverFrame();
         this.scene.add(this.hoverFrame);
     }
@@ -20,128 +21,54 @@ class SceneManager {
         return frame;
     }
 
-    createNode(element) {
-        const { id, type, color = 0xffffff, size = 1, htmlContent = '' } = element;
-        let object, geometry, material;
-
-        switch (type) {
-            case 'html': {
-                const div = document.createElement('div');
-                div.innerHTML = htmlContent;
-                div.style.pointerEvents = 'auto';
-                div.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    this.eventDispatcher.dispatchEvent({ type: 'element:click', id });
-                });
-                object = new CSS3DObject(div);
-                const scale = 0.01;
-                object.scale.set(scale, scale, scale);
-                break;
-            }
-            case 'sphere':
-                geometry = new THREE.SphereGeometry(size, 32, 32);
-                material = new THREE.MeshBasicMaterial({ color });
-                object = new THREE.Mesh(geometry, material);
-                break;
-            case 'box':
-            default:
-                geometry = new THREE.BoxGeometry(size, size, size);
-                material = new THREE.MeshBasicMaterial({ color });
-                object = new THREE.Mesh(geometry, material);
-                break;
-        }
-
-        object.userData = { id, type };
-        return object;
-    }
-
-    createEdge(edgeData) {
-        const sourceNode = this.nodes.get(edgeData.source);
-        const targetNode = this.nodes.get(edgeData.target);
-
-        if (!sourceNode || !targetNode) {
-            console.warn(`Could not create edge "${edgeData.id}": source or target node not found.`);
-            return null;
-        }
-
-        const points = [sourceNode.position, targetNode.position];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-        const material = edgeData.dashed
-            ? new THREE.LineDashedMaterial({
-                  color: edgeData.color || 0xffffff,
-                  dashSize: 0.5,
-                  gapSize: 0.25,
-              })
-            : new THREE.LineBasicMaterial({ color: edgeData.color || 0xffffff });
-
-        const edgeLine = new THREE.Line(geometry, material);
-        if (edgeData.dashed) {
-            edgeLine.computeLineDistances();
-        }
-
-        edgeLine.userData.id = edgeData.id;
-        edgeLine.userData.source = edgeData.source;
-        edgeLine.userData.target = edgeData.target;
-
-        return edgeLine;
-    }
-
     add(element) {
-        const isEdge = element.type === 'edge';
-        const collection = isEdge ? this.edges : this.nodes;
-
-        if (collection.has(element.id)) {
-            console.warn(`${isEdge ? 'Edge' : 'Node'} with ID ${element.id} already exists.`);
+        if (this.elements.has(element.id)) {
+            console.warn(`Element with ID ${element.id} already exists.`);
             return;
         }
 
-        const object = isEdge ? this.createEdge(element) : this.createNode(element);
+        const object = this.factory.create(element);
         if (object) {
-            collection.set(element.id, object);
+            this.elements.set(element.id, object);
             this.scene.add(object);
         }
     }
 
     remove(elementId) {
-        this.removeNode(elementId) || this.removeEdge(elementId);
+        this._removeElement(elementId);
     }
 
-    removeNode(nodeId) {
-        const object = this.nodes.get(nodeId);
-        if (object) {
-            this.scene.remove(object);
-            if (object.geometry) object.geometry.dispose();
-            if (object.material) object.material.dispose();
-            object.traverse(child => {
-                if (child.geometry) child.geometry.dispose();
-                if (child.material) child.material.dispose();
-            });
-            this.nodes.delete(nodeId);
+    _disposeObject(object) {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) object.material.dispose();
+        object.traverse(child => {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) child.material.dispose();
+        });
+    }
 
-            // Also remove connected edges
+    _removeElement(elementId) {
+        const object = this.elements.get(elementId);
+        if (!object) return;
+
+        // If it's a node, also remove connected edges
+        if (object.userData.type !== 'edge') {
             const edgesToRemove = [];
-            this.edges.forEach(edge => {
-                if (edge.userData.source === nodeId || edge.userData.target === nodeId) {
-                    edgesToRemove.push(edge.userData.id);
+            this.elements.forEach((el, id) => {
+                if (el.userData.type === 'edge' && (el.userData.source === elementId || el.userData.target === elementId)) {
+                    edgesToRemove.push(id);
                 }
             });
-            edgesToRemove.forEach(edgeId => this.removeEdge(edgeId));
+            edgesToRemove.forEach(id => this._removeElement(id));
         }
-    }
 
-    removeEdge(edgeId) {
-        const edge = this.edges.get(edgeId);
-        if (edge) {
-            this.scene.remove(edge);
-            if (edge.geometry) edge.geometry.dispose();
-            if (edge.material) edge.material.dispose();
-            this.edges.delete(edgeId);
-        }
+        this.scene.remove(object);
+        this._disposeObject(object);
+        this.elements.delete(elementId);
     }
 
     update(elementId, props) {
-        const object = this.nodes.get(elementId);
+        const object = this.elements.get(elementId);
         if (!object) {
             console.warn(`Element with ID ${elementId} not found.`);
             return;
@@ -162,21 +89,25 @@ class SceneManager {
     }
 
     updateLayout(simulationNodes) {
-        // Update node positions
+        // Update node positions from the simulation
         simulationNodes.forEach(nodeData => {
-            const nodeObject = this.nodes.get(nodeData.id);
+            const nodeObject = this.elements.get(nodeData.id);
             if (nodeObject) {
                 nodeObject.position.set(nodeData.x, nodeData.y, nodeData.z);
             }
         });
 
-        // Update edge positions
-        this.edges.forEach(edge => this.updateEdgePosition(edge));
+        // Update edge geometries to reflect new node positions
+        this.elements.forEach(element => {
+            if (element.userData.type === 'edge') {
+                this.updateEdgePosition(element);
+            }
+        });
     }
 
     updateEdgePosition(edge) {
-        const sourceNode = this.nodes.get(edge.userData.source);
-        const targetNode = this.nodes.get(edge.userData.target);
+        const sourceNode = this.elements.get(edge.userData.source);
+        const targetNode = this.elements.get(edge.userData.target);
         if (!sourceNode || !targetNode) return;
 
         const positions = edge.geometry.attributes.position;
@@ -189,15 +120,15 @@ class SceneManager {
     }
 
     updateConnectedEdges(nodeId) {
-        this.edges.forEach(edge => {
-            if (edge.userData.source === nodeId || edge.userData.target === nodeId) {
-                this.updateEdgePosition(edge);
+        this.elements.forEach(element => {
+            if (element.userData.type === 'edge' && (element.userData.source === nodeId || element.userData.target === nodeId)) {
+                this.updateEdgePosition(element);
             }
         });
     }
 
     setHovered(elementId, isHovered) {
-        const element = this.nodes.get(elementId);
+        const element = this.elements.get(elementId);
 
         if (!element) {
             this.hoverFrame.visible = false;
@@ -218,12 +149,12 @@ class SceneManager {
     }
 
     destroy() {
-        [...this.nodes.keys()].forEach(id => this.removeNode(id));
-        [...this.edges.keys()].forEach(id => this.removeEdge(id));
+        // Use [...this.elements.keys()] to create a copy of keys,
+        // as the map will be modified during iteration by _removeElement.
+        [...this.elements.keys()].forEach(id => this._removeElement(id));
 
         if (this.hoverFrame) {
-            if (this.hoverFrame.geometry) this.hoverFrame.geometry.dispose();
-            if (this.hoverFrame.material) this.hoverFrame.material.dispose();
+            this._disposeObject(this.hoverFrame);
             this.scene.remove(this.hoverFrame);
         }
     }

@@ -18,16 +18,14 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.interactionManager = new InteractionManager(camera, this.renderer.renderer.domElement, this.sceneManager, this);
 
         // Process initial elements
-        const nodes = elements.filter(el => el.type !== 'edge');
-        const edges = elements.filter(el => el.type === 'edge');
-
-        nodes.forEach(node => this.sceneManager.addNode(node));
-        edges.forEach(edge => this.sceneManager.addEdge(edge));
+        // Add nodes first, then edges
+        elements.filter(el => el.type !== 'edge').forEach(node => this.sceneManager.add(node));
+        elements.filter(el => el.type === 'edge').forEach(edge => this.sceneManager.add(edge));
 
         // Initialize layout manager
         this.layoutManager = new LayoutManager(
-            nodes,
-            edges,
+            elements.filter(el => el.type !== 'edge'),
+            elements.filter(el => el.type === 'edge'),
             this.sceneManager // Pass the sceneManager instance
         );
 

@@ -23,7 +23,7 @@ class InteractionManager {
         this.mouse.y = -(event.clientY / this.canvas.clientHeight) * 2 + 1;
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects([...this.sceneManager.nodes.values()]);
+        const intersects = this.raycaster.intersectObjects([...this.sceneManager.elements.values()]);
 
         const intersectedObject = intersects.length > 0 ? intersects[0].object : null;
         const isHtml = intersectedObject?.userData.type === 'html';
@@ -44,7 +44,7 @@ class InteractionManager {
         isFocused ? this.graph.goBack() : this.graph.flyTo(this.hoveredElementId);
     }
 
-    setHovered(elementId, object) {
+    setHovered(elementId) {
         // Unhover previous element
         if (this.hoveredElementId) {
             this.sceneManager.setHovered(this.hoveredElementId, false);
