@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import TWEEN from '@tweenjs/tween.js';
 import Renderer from './Renderer.js';
 import SceneManager from './SceneManager.js';
 import CameraManager from './CameraManager.js';
@@ -7,40 +8,54 @@ import LayoutManager from './LayoutManager.js';
 import GraphManager from './GraphManager.js';
 
 class SpaceGraph extends THREE.EventDispatcher {
-    constructor({ container, elements = [], backgroundColor = 0x000000, bloom = {} } = {}) {
+    constructor(config) {
         super();
-        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.z = 35; // Zoom out to see the whole graph
+        this.config = config;
+        this.container = config.container;
 
-        this.graphManager = new GraphManager();
-        this.renderer = new Renderer(container, camera, { bloom });
-        this.renderer.setBackgroundColor(backgroundColor);
+        this._initCamera();
+        this._initManagers();
+        this._initEventListeners();
 
-        this.sceneManager = new SceneManager(this.renderer.getScene(), this, this.graphManager);
-        this.cameraManager = new CameraManager(camera, this.renderer.getDomElement());
-        this.interactionManager = new InteractionManager(camera, this.renderer.getDomElement(), this.sceneManager, this);
-        this.layoutManager = new LayoutManager(this.graphManager, this.sceneManager);
-
-        // Process initial elements
-        elements.forEach(element => this.graphManager.add(element));
+        this.config.elements?.forEach(element => this.graphManager.add(element));
 
         this.start();
+    }
+
+    _initCamera() {
+        this.camera = new THREE.PerspectiveCamera(75, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
+        this.camera.position.z = 35;
+    }
+
+    _initManagers() {
+        this.graphManager = new GraphManager();
+        this.renderer = new Renderer(this.container, this.camera, { bloom: this.config.bloom });
+        this.renderer.setBackgroundColor(this.config.backgroundColor);
+        this.sceneManager = new SceneManager(this.renderer.getScene(), this, this.graphManager);
+        this.cameraManager = new CameraManager(this.camera, this.renderer.getDomElement());
+        this.interactionManager = new InteractionManager(this.camera, this.renderer.getDomElement(), this.sceneManager);
+        this.layoutManager = new LayoutManager(this.graphManager, this.sceneManager);
+    }
+
+    _initEventListeners() {
+        this.interactionManager.addEventListener('focus', ({ id }) => this.flyTo(id));
+        this.interactionManager.addEventListener('defocus', () => this.goBack());
     }
 
     add(element) {
         this.graphManager.add(element);
     }
 
-    remove(elementId) {
-        this.graphManager.remove(elementId);
+    remove(id) {
+        this.graphManager.remove(id);
     }
 
-    update(elementId, props) {
-        this.sceneManager.update(elementId, props);
+    update(id, props) {
+        this.sceneManager.update(id, props);
     }
 
-    flyTo(elementId) {
-        const element = this.sceneManager.elements.get(elementId);
+    flyTo(id) {
+        const element = this.sceneManager.elements.get(id);
         if (element) {
             this.cameraManager.flyTo(element);
         }
@@ -50,35 +65,27 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.cameraManager.goBack();
     }
 
-    // A simple animation loop
     start() {
         this.renderer.setAnimationLoop((time) => {
+            TWEEN.update(time);
             this.cameraManager.update(time);
             this.renderer.render();
         });
     }
 
     destroy() {
-        // 1. Stop the animation loop
         this.renderer.setAnimationLoop(null);
-
-        // 2. Clean up managers
         this.interactionManager.destroy();
-        this.sceneManager.destroy(); // Will clear the scene and dispose objects
-
-        // 3. Destroy the renderer and remove its canvas
+        this.sceneManager.destroy();
         this.renderer.destroy();
+        this.layoutManager.destroy();
+        this.graphManager.destroy();
 
-        // 4. Remove all event listeners from the SpaceGraph instance itself
-        // The _listeners property is an internal detail of THREE.EventDispatcher
         if (this._listeners) {
-            Object.keys(this._listeners).forEach(type => {
-                delete this._listeners[type];
-            });
+            Object.keys(this._listeners).forEach(type => delete this._listeners[type]);
         }
     }
 
-    // Alias for addEventListener
     on(type, listener) {
         this.addEventListener(type, listener);
     }

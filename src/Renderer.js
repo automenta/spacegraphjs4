@@ -5,76 +5,76 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 class Renderer {
-    constructor(container, camera, options = {}) {
+    constructor(container, camera, { bloom = {} } = {}) {
         this.container = container;
         this.scene = new THREE.Scene();
         this.camera = camera;
-        this.options = options;
+        this.bloomOptions = bloom;
 
-        // WebGL Renderer
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this._setupRenderers();
+        this._setupDomLayers();
+        this._setupPostprocessing();
 
-        // CSS3D Renderer
-        this.cssRenderer = new CSS3DRenderer();
-
-        this.setup();
-        this.setupPostprocessing();
+        this.onWindowResize = this._onWindowResize.bind(this);
+        window.addEventListener('resize', this.onWindowResize);
     }
 
-    setup() {
-        // WebGL Renderer Setup
-        this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    _setupRenderers() {
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-        this.container.appendChild(this.renderer.domElement);
-        this.renderer.domElement.style.position = 'absolute';
-        this.renderer.domElement.style.top = 0;
-        this.renderer.domElement.style.zIndex = 0; // Ensure WebGL is in the background
 
-        // CSS3D Renderer Setup
-        this.cssRenderer.setSize(this.container.clientWidth, this.container.clientHeight);
-        this.container.appendChild(this.cssRenderer.domElement);
-        this.cssRenderer.domElement.style.position = 'absolute';
-        this.cssRenderer.domElement.style.top = 0;
-        this.cssRenderer.domElement.style.zIndex = 1; // CSS layer on top
-        this.cssRenderer.domElement.style.pointerEvents = 'none'; // Let clicks pass through to the canvas
-
-        window.addEventListener('resize', this.onWindowResize.bind(this));
+        this.cssRenderer = new CSS3DRenderer();
     }
 
-    setupPostprocessing() {
-        const renderTarget = new THREE.WebGLRenderTarget(
-            this.container.clientWidth,
-            this.container.clientHeight,
-            {
-                format: THREE.RGBAFormat // Explicitly set format
-            }
-        );
+    _setupDomLayers() {
+        this.cssPointerEventsContainer = document.createElement('div');
+        this.cssPointerEventsContainer.style.position = 'absolute';
+        this.cssPointerEventsContainer.style.top = '0';
+        this.cssPointerEventsContainer.style.left = '0';
+        this.cssPointerEventsContainer.style.width = '100%';
+        this.cssPointerEventsContainer.style.height = '100%';
+        this.cssPointerEventsContainer.style.zIndex = '10'; // High z-index for interaction
+        this.container.appendChild(this.cssPointerEventsContainer);
 
-        this.composer = new EffectComposer(this.renderer, renderTarget);
-        const renderPass = new RenderPass(this.scene, this.camera);
-        this.composer.addPass(renderPass);
+        const setupElement = (element, zIndex, pointerEvents = 'none') => {
+            element.style.position = 'absolute';
+            element.style.top = '0';
+            element.style.left = '0';
+            element.style.width = '100%';
+            element.style.height = '100%';
+            element.style.zIndex = zIndex;
+            element.style.pointerEvents = pointerEvents;
+            this.container.appendChild(element);
+        };
 
-        const bloomOptions = this.options.bloom;
-        if (bloomOptions && bloomOptions.enabled) {
+        setupElement(this.renderer.domElement, 1);
+        setupElement(this.cssRenderer.domElement, 2);
+    }
+
+    _setupPostprocessing() {
+        this.composer = new EffectComposer(this.renderer);
+        this.composer.addPass(new RenderPass(this.scene, this.camera));
+
+        if (this.bloomOptions.enabled) {
             this.bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(this.container.clientWidth, this.container.clientHeight),
-                bloomOptions.strength || 1.5,
-                bloomOptions.radius || 0.4,
-                bloomOptions.threshold || 0.85
+                this.bloomOptions.strength,
+                this.bloomOptions.radius,
+                this.bloomOptions.threshold
             );
             this.composer.addPass(this.bloomPass);
         }
     }
 
-    onWindowResize() {
-        this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+    _onWindowResize() {
+        const { clientWidth, clientHeight } = this.container;
+        this.camera.aspect = clientWidth / clientHeight;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
-        this.cssRenderer.setSize(this.container.clientWidth, this.container.clientHeight);
-        this.composer.setSize(this.container.clientWidth, this.container.clientHeight);
-        this.render();
+        this.renderer.setSize(clientWidth, clientHeight);
+        this.cssRenderer.setSize(clientWidth, clientHeight);
+        this.composer.setSize(clientWidth, clientHeight);
     }
 
     render() {
@@ -87,7 +87,7 @@ class Renderer {
     }
 
     getDomElement() {
-        return this.cssRenderer.domElement;
+        return this.cssPointerEventsContainer;
     }
 
     setBackgroundColor(color) {
@@ -99,12 +99,13 @@ class Renderer {
     }
 
     destroy() {
-        window.removeEventListener('resize', this.onWindowResize.bind(this));
+        window.removeEventListener('resize', this.onWindowResize);
         this.renderer.setAnimationLoop(null);
         this.renderer.dispose();
 
-        this.container.contains(this.renderer.domElement) && this.container.removeChild(this.renderer.domElement);
-        this.container.contains(this.cssRenderer.domElement) && this.container.removeChild(this.cssRenderer.domElement);
+        [this.renderer.domElement, this.cssRenderer.domElement, this.cssPointerEventsContainer].forEach(element => {
+            element.parentElement.removeChild(element);
+        });
     }
 }
 
