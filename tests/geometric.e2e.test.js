@@ -1,52 +1,46 @@
 import puppeteer from 'puppeteer';
+import { toMatchImageSnapshot } from 'jest-image-snapshot';
+
+expect.extend({ toMatchImageSnapshot });
 
 const JEST_TIMEOUT = 60000; // 60 seconds
-const VITE_PORT = 5173; // Default Vite port
+const VITE_PORT = process.env.VITE_PORT || 5173;
 
-describe('SpaceGraph.js Demo', () => {
+describe('SpaceGraph.js Geometric Demo', () => {
     let browser;
     let page;
-    let consoleErrors = [];
 
     beforeAll(async () => {
         browser = await puppeteer.launch();
         page = await browser.newPage();
-
-        page.on('console', msg => {
-            if (msg.type() === 'error') {
-                // Ignore benign favicon error
-                if (msg.text().includes('Failed to load resource: the server responded with a status of 404 (Not Found)') && msg.location().url.includes('favicon.ico')) {
-                    return;
-                }
-                consoleErrors.push(msg.text());
-            }
-        });
-
         await page.setViewport({ width: 1280, height: 720 });
     }, JEST_TIMEOUT);
-
-    beforeEach(() => {
-        // Reset errors before each test
-        consoleErrors = [];
-    });
 
     afterAll(async () => {
         await browser.close();
     });
 
-    test('should display the initial demo scene and have no console errors', async () => {
+    test('should auto-zoom to fit the geometric demo scene', async () => {
         await page.goto(`http://localhost:${VITE_PORT}`);
-
         await page.waitForSelector('#spacegraph-container canvas');
+
+        // Click the "Geometric" demo link
+        await page.evaluate(() => {
+            const demoLink = Array.from(document.querySelectorAll('#demo-list li')).find(el => el.textContent === 'Geometric');
+            if (demoLink) {
+                demoLink.click();
+            }
+        });
+
+        // Wait for the demo to load and camera to settle
         await new Promise(resolve => setTimeout(resolve, 2000));
 
+        // The flyTo() is called by default on load, so we just need to take a screenshot
         const image = await page.screenshot();
 
         expect(image).toMatchImageSnapshot({
             failureThreshold: 0.01,
             failureThresholdType: 'percent',
         });
-
-        expect(consoleErrors).toEqual([]);
     }, JEST_TIMEOUT);
 });

@@ -106,13 +106,15 @@ class UIManager {
         );
 
         // Orbit Controls Toggle
-        this.createToggle(
-            'Orbit Controls',
-            this.graph.controlsManager.orbitControls.enabled,
-            (isChecked) => {
-                this.graph.setOrbitControls(isChecked);
-            }
-        );
+        if (this.graph.controlsManager.orbitControls) {
+            this.createToggle(
+                'Orbit Controls',
+                this.graph.controlsManager.orbitControls.enabled,
+                (isChecked) => {
+                    this.graph.setOrbitControls(isChecked);
+                }
+            );
+        }
 
         // AutoZoom Toggle
         this.createToggle(

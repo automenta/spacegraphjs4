@@ -38,9 +38,9 @@ class CameraManager {
 
         const fov = this.camera.fov * (Math.PI / 180);
         const aspect = this.camera.aspect;
-        const distanceY = size.y / 2 / Math.tan(fov / 2) ;
-        const distanceX = size.x / 2 / (Math.tan(fov / 2) * aspect);
-        const distance = this.config.zoom.padding * Math.max(distanceX, distanceY);
+
+        const maxDim = Math.max(size.x / aspect, size.y);
+        const distance = this.config.zoom.padding * (maxDim / 2) / Math.tan(fov / 2);
 
         const direction = new THREE.Vector3().subVectors(this.camera.position, center).normalize();
         const targetPosition = center.clone().add(direction.multiplyScalar(distance));
