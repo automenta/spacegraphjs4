@@ -17,7 +17,7 @@ class SpaceGraph extends THREE.EventDispatcher {
         this._initManagers();
         this._initEventListeners();
 
-        this.config.elements?.forEach(element => this.graphManager.add(element));
+        this.config.elements?.forEach(element => this.addElement(element));
 
         this.start();
     }
@@ -42,12 +42,32 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.interactionManager.addEventListener('defocus', () => this.goBack());
     }
 
-    add(element) {
+    // Public API
+    addElement(element) {
         this.graphManager.add(element);
     }
 
-    remove(id) {
+    removeElement(id) {
         this.graphManager.remove(id);
+    }
+
+    addNode(nodeData) {
+        this.graphManager.addNode(nodeData);
+    }
+
+    removeNode(nodeId) {
+        this.graphManager.removeNode(nodeId);
+    }
+
+    connect(sourceId, targetId, edgeProps = {}) {
+        const edge = {
+            id: `edge-${sourceId}-${targetId}-${Date.now()}`,
+            source: sourceId,
+            target: targetId,
+            type: 'edge',
+            ...edgeProps
+        };
+        this.graphManager.addEdge(edge);
     }
 
     update(id, props) {

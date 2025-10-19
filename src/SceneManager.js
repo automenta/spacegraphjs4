@@ -8,7 +8,8 @@ class SceneManager {
         this.eventDispatcher = eventDispatcher;
         this.graphManager = graphManager;
         this.elements = new Map(); // Visual objects
-        this.factory = new ObjectFactory(this.elements, this.eventDispatcher);
+
+        this._addLighting();
 
         // Bind event handlers once
         this._onNodeAddedHandler = this._onNodeAdded.bind(this);
@@ -24,6 +25,15 @@ class SceneManager {
         this.graphManager.addEventListener('node:removed', this._onNodeRemovedHandler);
         this.graphManager.addEventListener('edge:added', this._onEdgeAddedHandler);
         this.graphManager.addEventListener('edge:removed', this._onEdgeRemovedHandler);
+    }
+
+    _addLighting() {
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        this.scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 10, 7.5);
+        this.scene.add(directionalLight);
     }
 
     createHoverFrame() {
@@ -56,12 +66,45 @@ class SceneManager {
             console.warn(`Element with ID ${element.id} already exists.`);
             return;
         }
-        const object = this.factory.create(element);
+
+        let object;
+        if (element.type === 'edge') {
+            object = this._createEdge(element);
+        } else {
+            object = ObjectFactory.create(element);
+        }
+
         if (object) {
             this.elements.set(element.id, object);
             this.scene.add(object);
         }
     }
+
+    _createEdge(edgeData) {
+        const sourceNode = this.elements.get(edgeData.source);
+        const targetNode = this.elements.get(edgeData.target);
+
+        if (!sourceNode || !targetNode) {
+            console.warn(`Edge ${edgeData.id} cannot be created: source or target node not found yet.`);
+            return null;
+        }
+
+        const points = [sourceNode.position.clone(), targetNode.position.clone()];
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+        const material = edgeData.dashed
+            ? new THREE.LineDashedMaterial({ color: edgeData.color || 0xffffff, dashSize: 0.5, gapSize: 0.2 })
+            : new THREE.LineBasicMaterial({ color: edgeData.color || 0xffffff });
+
+        const line = new THREE.Line(geometry, material);
+        if (edgeData.dashed) {
+            line.computeLineDistances();
+        }
+
+        line.userData = { ...edgeData };
+        return line;
+    }
+
 
     _removeElement(elementId) {
         const object = this.elements.get(elementId);
@@ -74,10 +117,22 @@ class SceneManager {
 
     _disposeObject(object) {
         if (object.geometry) object.geometry.dispose();
-        if (object.material) object.material.dispose();
+        if (object.material) {
+            if (Array.isArray(object.material)) {
+                object.material.forEach(m => m.dispose());
+            } else {
+                object.material.dispose();
+            }
+        }
         object.traverse(child => {
             if (child.geometry) child.geometry.dispose();
-            if (child.material) child.material.dispose();
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(m => m.dispose());
+                } else {
+                    child.material.dispose();
+                }
+            }
         });
     }
 
@@ -93,7 +148,7 @@ class SceneManager {
             this.updateConnectedEdges(elementId);
         }
 
-        if (props.color && object.material) {
+        if (props.color && object.material && object.material.color) {
             object.material.color.set(props.color);
         }
 
