@@ -25,12 +25,12 @@ def run_verification():
         # Wait for the demo to load
         time.sleep(2)
 
-        # Trigger the autozoom to the central sphere
+        # Trigger the autozoom to the whole scene
         page.evaluate("""
             () => {
                 const graph = window.graph;
                 if (graph) {
-                    graph.flyTo('center-sphere');
+                    graph.flyTo();
                 }
             }
         """)

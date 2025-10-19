@@ -85,9 +85,15 @@ class SpaceGraph extends THREE.EventDispatcher {
     }
 
     flyTo(id) {
-        const element = this.sceneManager.elements.get(id);
-        if (element) {
-            this.cameraManager.flyTo(element);
+        if (id) {
+            const element = this.sceneManager.elements.get(id);
+            if (element) {
+                this.cameraManager.flyTo(element);
+            }
+        } else {
+            // If no id is provided, fly to the entire scene
+            const allElements = [...this.sceneManager.elements.values()];
+            this.cameraManager.flyTo(allElements);
         }
     }
 

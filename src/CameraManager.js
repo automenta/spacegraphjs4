@@ -13,8 +13,8 @@ class CameraManager {
         this.currentTarget = new THREE.Vector3(0, 0, 0);
     }
 
-    // Fly the camera to a target element
-    flyTo(element) {
+    // Fly the camera to a target element or group of elements
+    flyTo(target) {
         if (this.isAnimating) return;
 
         this.history.push({
@@ -22,15 +22,25 @@ class CameraManager {
             target: this.currentTarget.clone(),
         });
 
-        const box = new THREE.Box3().setFromObject(element);
+        const box = new THREE.Box3();
+
+        if (Array.isArray(target)) {
+            target.forEach(element => box.expandByObject(element));
+        } else {
+            box.setFromObject(target);
+        }
+
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
+        // If the bounding box is empty, don't fly anywhere
+        if (size.x === 0 && size.y === 0 && size.z === 0) return;
+
         const fov = this.camera.fov * (Math.PI / 180);
         const aspect = this.camera.aspect;
-        const distanceY = size.y / 2 / Math.tan(fov / 2);
-        const distanceX = size.x / 2 / Math.tan(fov / 2 * aspect);
-        const distance = (element.isCSS3DObject ? 1.5 : 1.2) * Math.max(distanceX, distanceY);
+        const distanceY = size.y / 2 / Math.tan(fov / 2) ;
+        const distanceX = size.x / 2 / (Math.tan(fov / 2) * aspect);
+        const distance = this.config.zoom.padding * Math.max(distanceX, distanceY);
 
         const direction = new THREE.Vector3().subVectors(this.camera.position, center).normalize();
         const targetPosition = center.clone().add(direction.multiplyScalar(distance));
