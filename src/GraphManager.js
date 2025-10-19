@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 
 class GraphManager extends THREE.EventDispatcher {
-    constructor() {
+    constructor(config) {
         super();
+        this.config = config;
         this.nodes = new Map();
         this.edges = new Map();
     }
@@ -71,6 +72,30 @@ class GraphManager extends THREE.EventDispatcher {
 
     getEdges() {
         return Array.from(this.edges.values());
+    }
+
+    getSubgraph(nodeId) {
+        if (!this.nodes.has(nodeId)) {
+            return null;
+        }
+
+        const inScope = new Set([nodeId]);
+        const relevantEdges = new Set();
+
+        this.edges.forEach(edge => {
+            if (edge.source === nodeId) {
+                inScope.add(edge.target);
+                relevantEdges.add(edge.id);
+            } else if (edge.target === nodeId) {
+                inScope.add(edge.source);
+                relevantEdges.add(edge.id);
+            }
+        });
+
+        return {
+            nodes: new Set(Array.from(inScope).filter(id => this.nodes.has(id))),
+            edges: relevantEdges,
+        };
     }
 }
 

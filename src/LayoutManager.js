@@ -1,7 +1,8 @@
 import * as d3 from 'd3-force-3d';
 
 class LayoutManager {
-    constructor(graphManager, sceneManager) {
+    constructor(config, graphManager, sceneManager) {
+        this.config = config.layout;
         this.graphManager = graphManager;
         this.sceneManager = sceneManager;
 
@@ -21,11 +22,15 @@ class LayoutManager {
     }
 
     _initSimulation() {
+        const { alpha, alphaDecay, velocityDecay, force } = this.config;
         const simulation = d3.forceSimulation()
             .numDimensions(3)
-            .force('link', d3.forceLink([]).id(d => d.id).distance(10))
-            .force('charge', d3.forceManyBody().strength(-15))
+            .force('link', d3.forceLink([]).id(d => d.id).distance(force.link))
+            .force('charge', d3.forceManyBody().strength(force.charge))
             .force('center', d3.forceCenter(0, 0, 0))
+            .alpha(alpha)
+            .alphaDecay(alphaDecay)
+            .velocityDecay(velocityDecay)
             .on('tick', this._onTick.bind(this));
         return simulation;
     }
@@ -36,7 +41,7 @@ class LayoutManager {
 
         this.simulation.nodes(nodes);
         this.simulation.force('link').links(edges);
-        this.simulation.alpha(1).restart();
+        this.simulation.alpha(this.config.alpha).restart();
     }
 
     _onNodeAdded() {

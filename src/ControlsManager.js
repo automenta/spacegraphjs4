@@ -2,38 +2,40 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 class ControlsManager extends THREE.EventDispatcher {
-    constructor(camera, domElement, config = {}, sceneManager, interactionManager) {
+    constructor(config, camera, domElement, sceneManager, interactionManager, graphManager) {
         super();
+        this.config = config.controls;
         this.camera = camera;
         this.domElement = domElement;
-        this.config = config;
         this.sceneManager = sceneManager;
         this.interactionManager = interactionManager;
+        this.graphManager = graphManager;
         this.orbitControls = null;
         this.focusedElementId = null;
+        this.scopedElementId = null;
 
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
 
         this._onWheel = this._onWheel.bind(this);
         this._onClick = this._onClick.bind(this);
+        this._onDoubleClick = this._onDoubleClick.bind(this);
 
         this.init();
     }
 
     init() {
-        if (this.config.orbit) {
+        if (this.config.orbit.enabled) {
             this.orbitControls = new OrbitControls(this.camera, this.domElement);
-            this.orbitControls.enableDamping = true;
-            this.orbitControls.dampingFactor = 0.05;
-            this.orbitControls.screenSpacePanning = false;
+            Object.assign(this.orbitControls, this.config.orbit);
         }
 
-        if (this.config.autoZoom) {
+        if (this.config.autoZoom.enabled) {
             this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
         }
 
         this.interactionManager.addEventListener('click', this._onClick);
+        this.interactionManager.addEventListener('doubleClick', this._onDoubleClick);
     }
 
     _onClick({ id }) {
@@ -99,12 +101,43 @@ class ControlsManager extends THREE.EventDispatcher {
         this.dispatchEvent({ type: 'defocus', id });
     }
 
+    _onDoubleClick({ id }) {
+        if (!id) {
+            if (this.scopedElementId) {
+                this.unscope();
+            }
+            return;
+        }
+
+        if (this.scopedElementId === id) {
+            this.unscope();
+        } else {
+            this.scope(id);
+        }
+    }
+
     destroy() {
         if (this.orbitControls) {
             this.orbitControls.dispose();
         }
         this.domElement.removeEventListener('wheel', this._onWheel);
         this.interactionManager.removeEventListener('click', this._onClick);
+        this.interactionManager.removeEventListener('doubleClick', this._onDoubleClick);
+    }
+
+    scope(id) {
+        if (this.scopedElementId === id) return;
+        const subgraph = this.graphManager.getSubgraph(id);
+        if (subgraph) {
+            this.scopedElementId = id;
+            this.sceneManager.setScope(subgraph);
+        }
+    }
+
+    unscope() {
+        if (!this.scopedElementId) return;
+        this.scopedElementId = null;
+        this.sceneManager.resetScope();
     }
 }
 

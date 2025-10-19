@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 
 class InteractionManager extends THREE.EventDispatcher {
-    constructor(camera, domElement, sceneManager) {
+    constructor(config, camera, domElement, sceneManager) {
         super();
+        this.config = config;
         this.camera = camera;
         this.domElement = domElement;
         this.sceneManager = sceneManager;
@@ -10,6 +11,8 @@ class InteractionManager extends THREE.EventDispatcher {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredElementId = null;
+        this.lastClickTime = 0;
+        this.lastClickedId = null;
 
         this.isDragging = false;
         this.dragStartMouse = new THREE.Vector2();
@@ -44,7 +47,7 @@ class InteractionManager extends THREE.EventDispatcher {
     _onMouseMove(event) {
         if (!this.isDragging && event.buttons > 0) {
             const distance = this.dragStartMouse.distanceTo(new THREE.Vector2(event.clientX, event.clientY));
-            if (distance > 2) { // Drag threshold
+            if (distance > this.config.interaction.dragThreshold) {
                 this.isDragging = true;
             }
         }
@@ -69,7 +72,23 @@ class InteractionManager extends THREE.EventDispatcher {
             this.isDragging = false;
             return;
         }
-        this.dispatchEvent({ type: 'click', id: this.hoveredElementId });
+
+        const currentTime = Date.now();
+        const clickedId = this.hoveredElementId;
+
+        if (clickedId &&
+            this.lastClickedId === clickedId &&
+            (currentTime - this.lastClickTime) < this.config.interaction.doubleClickTimeout) {
+            // Double-click detected
+            this.dispatchEvent({ type: 'doubleClick', id: clickedId });
+            this.lastClickTime = 0;
+            this.lastClickedId = null;
+        } else {
+            // Single-click
+            this.dispatchEvent({ type: 'click', id: clickedId });
+            this.lastClickTime = currentTime;
+            this.lastClickedId = clickedId;
+        }
     }
 
     _setHovered(id) {

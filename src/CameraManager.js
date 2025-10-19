@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
 
 class CameraManager {
-    constructor(camera, domElement, controlsManager) {
+    constructor(config, camera, domElement, controlsManager) {
+        this.config = config.camera;
         this.camera = camera;
         this.domElement = domElement;
         this.controlsManager = controlsManager;
@@ -54,7 +55,7 @@ class CameraManager {
         const currentLookAt = this.currentTarget.clone();
 
         new TWEEN.Tween(currentPosition)
-            .to(targetPosition, 500)
+            .to(targetPosition, this.config.animationDuration)
             .easing(TWEEN.Easing.Quadratic.InOut)
             .onUpdate(() => {
                 this.camera.position.copy(currentPosition);
@@ -62,7 +63,7 @@ class CameraManager {
             .start();
 
         new TWEEN.Tween(currentLookAt)
-            .to(targetLookAt, 500)
+            .to(targetLookAt, this.config.animationDuration)
             .easing(TWEEN.Easing.Quadratic.InOut)
             .onUpdate(() => {
                 this.camera.lookAt(currentLookAt);
@@ -84,10 +85,9 @@ class CameraManager {
 
     // Zoom the camera towards a target point
     zoom(target, delta) {
-        const zoomSpeed = 0.002;
         const direction = new THREE.Vector3().subVectors(target, this.camera.position);
         const distance = direction.length();
-        const zoomDistance = distance * zoomSpeed * delta;
+        const zoomDistance = distance * this.config.zoomSpeed * delta;
 
         // Don't zoom past the target
         if (zoomDistance > distance) {

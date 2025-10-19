@@ -5,22 +5,27 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 class Renderer {
-    constructor(container, camera, { bloom = {} } = {}) {
-        this.container = container;
+    constructor(config, camera) {
+        this.config = config.renderer;
+        this.container = config.container;
         this.scene = new THREE.Scene();
         this.camera = camera;
-        this.bloomOptions = bloom;
 
         this._setupRenderers();
         this._setupDomLayers();
         this._setupPostprocessing();
+        this.setBackgroundColor(this.config.backgroundColor);
+
 
         this.onWindowResize = this._onWindowResize.bind(this);
         window.addEventListener('resize', this.onWindowResize);
     }
 
     _setupRenderers() {
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: this.config.antialias,
+            alpha: this.config.alpha
+        });
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -56,13 +61,14 @@ class Renderer {
     _setupPostprocessing() {
         this.composer = new EffectComposer(this.renderer);
         this.composer.addPass(new RenderPass(this.scene, this.camera));
+        const bloomConfig = this.config.bloom;
 
-        if (this.bloomOptions.enabled) {
+        if (bloomConfig && bloomConfig.enabled) {
             this.bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(this.container.clientWidth, this.container.clientHeight),
-                this.bloomOptions.strength,
-                this.bloomOptions.radius,
-                this.bloomOptions.threshold
+                bloomConfig.strength,
+                bloomConfig.radius,
+                bloomConfig.threshold
             );
             this.composer.addPass(this.bloomPass);
         }

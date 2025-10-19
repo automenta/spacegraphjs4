@@ -1,13 +1,16 @@
 import * as THREE from 'three';
+import TWEEN from '@tweenjs/tween.js';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import ObjectFactory from './ObjectFactory.js';
 
 class SceneManager {
-    constructor(scene, eventDispatcher, graphManager) {
+    constructor(config, scene, eventDispatcher, graphManager) {
+        this.config = config;
         this.scene = scene;
         this.eventDispatcher = eventDispatcher;
         this.graphManager = graphManager;
         this.elements = new Map(); // Visual objects
+        this.objectFactory = new ObjectFactory(config.styles);
 
         this._addLighting();
 
@@ -28,18 +31,19 @@ class SceneManager {
     }
 
     _addLighting() {
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const { ambient, directional } = this.config.scene.lighting;
+        const ambientLight = new THREE.AmbientLight(ambient.color, ambient.intensity);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(5, 10, 7.5);
+        const directionalLight = new THREE.DirectionalLight(directional.color, directional.intensity);
+        directionalLight.position.set(directional.position.x, directional.position.y, directional.position.z);
         this.scene.add(directionalLight);
     }
 
     createHoverFrame() {
         const frameGeometry = new THREE.BoxGeometry(1, 1, 1);
         const frameEdges = new THREE.EdgesGeometry(frameGeometry);
-        const frameMaterial = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
+        const frameMaterial = new THREE.LineBasicMaterial({ color: this.config.scene.hover.color, linewidth: 2 });
         const frame = new THREE.LineSegments(frameEdges, frameMaterial);
         frame.visible = false;
         return frame;
@@ -71,7 +75,7 @@ class SceneManager {
         if (element.type === 'edge') {
             object = this._createEdge(element);
         } else {
-            object = ObjectFactory.create(element);
+            object = this.objectFactory.create(element);
         }
 
         if (object) {
@@ -92,16 +96,20 @@ class SceneManager {
         const points = [sourceNode.position.clone(), targetNode.position.clone()];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
-        const material = edgeData.dashed
-            ? new THREE.LineDashedMaterial({ color: edgeData.color || 0xffffff, dashSize: 0.5, gapSize: 0.2 })
-            : new THREE.LineBasicMaterial({ color: edgeData.color || 0xffffff });
+        const defaultStyle = this.config.styles.default.edge;
+        const color = edgeData.color || defaultStyle.color;
+        const dashed = edgeData.dashed !== undefined ? edgeData.dashed : defaultStyle.dashed;
+
+        const material = dashed
+            ? new THREE.LineDashedMaterial({ color, dashSize: 0.5, gapSize: 0.2 })
+            : new THREE.LineBasicMaterial({ color });
 
         const line = new THREE.Line(geometry, material);
-        if (edgeData.dashed) {
+        if (dashed) {
             line.computeLineDistances();
         }
 
-        line.userData = { ...edgeData };
+        line.userData = { ...edgeData, type: 'edge' };
         return line;
     }
 
@@ -209,7 +217,7 @@ class SceneManager {
             const size = box.getSize(new THREE.Vector3());
             const center = box.getCenter(new THREE.Vector3());
 
-            this.hoverFrame.scale.set(size.x, size.y, size.z).multiplyScalar(1.1);
+            this.hoverFrame.scale.set(size.x, size.y, size.z).multiplyScalar(this.config.scene.hover.scale);
             this.hoverFrame.position.copy(center);
             this.hoverFrame.visible = true;
         } else {
@@ -229,6 +237,39 @@ class SceneManager {
         if (this.hoverFrame) {
             this._disposeObject(this.hoverFrame);
             this.scene.remove(this.hoverFrame);
+        }
+    }
+
+    setScope(subgraph) {
+        const { fadeDuration, outOfScopeOpacity } = this.config.scope;
+
+        this.elements.forEach((element, id) => {
+            const inScope = subgraph.nodes.has(id) || subgraph.edges.has(id);
+            const targetOpacity = inScope ? 1.0 : outOfScopeOpacity;
+            this._tweenOpacity(element, targetOpacity, fadeDuration);
+        });
+    }
+
+    resetScope() {
+        const { fadeDuration } = this.config.scope;
+        this.elements.forEach(element => {
+            this._tweenOpacity(element, 1.0, fadeDuration);
+        });
+    }
+
+    _tweenOpacity(element, targetOpacity, duration) {
+        if (element instanceof CSS3DObject) {
+            new TWEEN.Tween(element.element.style)
+                .to({ opacity: targetOpacity }, duration)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start();
+        } else if (element.material) {
+            const material = element.material;
+            material.transparent = true;
+            new TWEEN.Tween(material)
+                .to({ opacity: targetOpacity }, duration)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start();
         }
     }
 }

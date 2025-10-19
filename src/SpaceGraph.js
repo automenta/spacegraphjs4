@@ -7,12 +7,27 @@ import InteractionManager from './InteractionManager.js';
 import LayoutManager from './LayoutManager.js';
 import GraphManager from './GraphManager.js';
 import ControlsManager from './ControlsManager.js';
+import { defaultConfig } from './config.js';
 
+// A simple deep merge function for config objects
+function deepMerge(target, source) {
+    const output = { ...target };
+    if (target && source && typeof target === 'object' && typeof source === 'object') {
+        Object.keys(source).forEach(key => {
+            if (source[key] && typeof source[key] === 'object' && key in target && target[key] && typeof target[key] === 'object') {
+                output[key] = deepMerge(target[key], source[key]);
+            } else {
+                output[key] = source[key];
+            }
+        });
+    }
+    return output;
+}
 class SpaceGraph extends THREE.EventDispatcher {
     constructor(config) {
         super();
-        this.config = config;
-        this.container = config.container;
+        this.config = deepMerge(defaultConfig, config);
+        this.container = this.config.container;
 
         this._initCamera();
         this._initManagers();
@@ -24,19 +39,20 @@ class SpaceGraph extends THREE.EventDispatcher {
     }
 
     _initCamera() {
-        this.camera = new THREE.PerspectiveCamera(75, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
-        this.camera.position.z = 35;
+        const { clientWidth, clientHeight } = this.container;
+        const { fov, near, far, initialPosition } = this.config.camera;
+        this.camera = new THREE.PerspectiveCamera(fov, clientWidth / clientHeight, near, far);
+        this.camera.position.set(initialPosition.x, initialPosition.y, initialPosition.z);
     }
 
     _initManagers() {
-        this.graphManager = new GraphManager();
-        this.renderer = new Renderer(this.container, this.camera, { bloom: this.config.bloom });
-        this.renderer.setBackgroundColor(this.config.backgroundColor);
-        this.sceneManager = new SceneManager(this.renderer.getScene(), this, this.graphManager);
-        this.interactionManager = new InteractionManager(this.camera, this.renderer.getDomElement(), this.sceneManager);
-        this.controlsManager = new ControlsManager(this.camera, this.renderer.getDomElement(), this.config.controls, this.sceneManager, this.interactionManager);
-        this.cameraManager = new CameraManager(this.camera, this.renderer.getDomElement(), this.controlsManager);
-        this.layoutManager = new LayoutManager(this.graphManager, this.sceneManager);
+        this.graphManager = new GraphManager(this.config);
+        this.renderer = new Renderer(this.config, this.camera);
+        this.sceneManager = new SceneManager(this.config, this.renderer.getScene(), this, this.graphManager);
+        this.interactionManager = new InteractionManager(this.config, this.camera, this.renderer.getDomElement(), this.sceneManager);
+        this.controlsManager = new ControlsManager(this.config, this.camera, this.renderer.getDomElement(), this.sceneManager, this.interactionManager, this.graphManager);
+        this.cameraManager = new CameraManager(this.config, this.camera, this.renderer.getDomElement(), this.controlsManager);
+        this.layoutManager = new LayoutManager(this.config, this.graphManager, this.sceneManager);
     }
 
     _initEventListeners() {
