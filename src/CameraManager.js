@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
 
 class CameraManager {
-    constructor(camera, domElement) {
+    constructor(camera, domElement, controlsManager) {
         this.camera = camera;
         this.domElement = domElement;
+        this.controlsManager = controlsManager;
         this.history = []; // Stack to store previous camera states
         this.isAnimating = false;
         // The point the camera is currently looking at
@@ -47,6 +48,7 @@ class CameraManager {
     // Animate camera to a new position and target
     animateCamera(targetPosition, targetLookAt) {
         this.isAnimating = true;
+        this.controlsManager.disable();
 
         const currentPosition = this.camera.position.clone();
         const currentLookAt = this.currentTarget.clone();
@@ -70,6 +72,7 @@ class CameraManager {
                 this.isAnimating = false;
                 this.camera.lookAt(targetLookAt);
                 this.currentTarget.copy(targetLookAt);
+                this.controlsManager.enable();
             })
             .start();
     }
@@ -77,6 +80,27 @@ class CameraManager {
     // Update needs to be called in the main animation loop
     update(time) {
         TWEEN.update(time);
+    }
+
+    // Zoom the camera towards a target point
+    zoom(target, delta) {
+        const zoomSpeed = 0.002;
+        const direction = new THREE.Vector3().subVectors(target, this.camera.position);
+        const distance = direction.length();
+        const zoomDistance = distance * zoomSpeed * delta;
+
+        // Don't zoom past the target
+        if (zoomDistance > distance) {
+            return;
+        }
+
+        direction.normalize();
+        this.camera.position.add(direction.multiplyScalar(zoomDistance));
+
+        // Also update the orbit controls target to pivot around the new point
+        if (this.controlsManager.orbitControls) {
+            this.controlsManager.orbitControls.target.copy(target);
+        }
     }
 }
 

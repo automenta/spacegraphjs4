@@ -6,6 +6,7 @@ import CameraManager from './CameraManager.js';
 import InteractionManager from './InteractionManager.js';
 import LayoutManager from './LayoutManager.js';
 import GraphManager from './GraphManager.js';
+import ControlsManager from './ControlsManager.js';
 
 class SpaceGraph extends THREE.EventDispatcher {
     constructor(config) {
@@ -32,14 +33,16 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.renderer = new Renderer(this.container, this.camera, { bloom: this.config.bloom });
         this.renderer.setBackgroundColor(this.config.backgroundColor);
         this.sceneManager = new SceneManager(this.renderer.getScene(), this, this.graphManager);
-        this.cameraManager = new CameraManager(this.camera, this.renderer.getDomElement());
         this.interactionManager = new InteractionManager(this.camera, this.renderer.getDomElement(), this.sceneManager);
+        this.controlsManager = new ControlsManager(this.camera, this.renderer.getDomElement(), this.config.controls, this.sceneManager, this.interactionManager);
+        this.cameraManager = new CameraManager(this.camera, this.renderer.getDomElement(), this.controlsManager);
         this.layoutManager = new LayoutManager(this.graphManager, this.sceneManager);
     }
 
     _initEventListeners() {
-        this.interactionManager.addEventListener('focus', ({ id }) => this.flyTo(id));
-        this.interactionManager.addEventListener('defocus', () => this.goBack());
+        this.controlsManager.addEventListener('focus', ({ id }) => this.flyTo(id));
+        this.controlsManager.addEventListener('defocus', () => this.goBack());
+        this.controlsManager.addEventListener('zoom', ({ delta, target }) => this.cameraManager.zoom(target, delta));
     }
 
     // Public API
@@ -89,6 +92,7 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.renderer.setAnimationLoop((time) => {
             TWEEN.update(time);
             this.cameraManager.update(time);
+            this.controlsManager.update();
             this.renderer.render();
         });
     }
@@ -100,6 +104,7 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.renderer.destroy();
         this.layoutManager.destroy();
         this.graphManager.destroy();
+        this.controlsManager.destroy();
 
         if (this._listeners) {
             Object.keys(this._listeners).forEach(type => delete this._listeners[type]);

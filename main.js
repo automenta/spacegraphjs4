@@ -107,6 +107,10 @@ const graph = new SpaceGraph({
         strength: 0.8,
         radius: 0.5,
         threshold: 0.1
+    },
+    controls: {
+        orbit: true,
+        autoZoom: true
     }
 });
 

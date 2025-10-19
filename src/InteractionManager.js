@@ -10,7 +10,6 @@ class InteractionManager extends THREE.EventDispatcher {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredElementId = null;
-        this.focusedElementId = null;
 
         this.isDragging = false;
         this.dragStartMouse = new THREE.Vector2();
@@ -70,17 +69,7 @@ class InteractionManager extends THREE.EventDispatcher {
             this.isDragging = false;
             return;
         }
-
-        if (this.hoveredElementId) {
-            this.dispatchEvent({ type: 'element:click', id: this.hoveredElementId });
-            if (this.focusedElementId === this.hoveredElementId) {
-                this._defocus();
-            } else {
-                this._focus(this.hoveredElementId);
-            }
-        } else if (this.focusedElementId) {
-            this._defocus();
-        }
+        this.dispatchEvent({ type: 'click', id: this.hoveredElementId });
     }
 
     _setHovered(id) {
@@ -97,19 +86,6 @@ class InteractionManager extends THREE.EventDispatcher {
             this.sceneManager.setHovered(this.hoveredElementId, true);
             this.dispatchEvent({ type: 'element:hover', id: this.hoveredElementId });
         }
-    }
-
-    _focus(id) {
-        if (this.focusedElementId === id) return;
-        this.focusedElementId = id;
-        this.dispatchEvent({ type: 'focus', id });
-    }
-
-    _defocus() {
-        const id = this.focusedElementId;
-        if (!id) return;
-        this.focusedElementId = null;
-        this.dispatchEvent({ type: 'defocus', id });
     }
 
     destroy() {
