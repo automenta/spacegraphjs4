@@ -46,6 +46,16 @@ class CameraManager {
         this.animateCamera(prevState.position, prevState.target);
     }
 
+    // Reset the camera to its initial state
+    reset() {
+        const { x, y, z } = this.config.initialPosition;
+        const initialPosition = new THREE.Vector3(x, y, z);
+        const initialTarget = new THREE.Vector3(0, 0, 0);
+
+        this.animateCamera(initialPosition, initialTarget);
+        this.history = [];
+    }
+
     // Animate camera to a new position and target
     animateCamera(targetPosition, targetLookAt) {
         this.isAnimating = true;

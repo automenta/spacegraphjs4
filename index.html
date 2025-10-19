@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpaceGraph.js - AutoZoom Test</title>
+    <title>SpaceGraph.js - Demos</title>
     <style>
         body {
             margin: 0;
@@ -214,24 +214,70 @@
         </div>
         <div class="sidebar-content">
             <div class="sidebar-section">
-                <div class="section-title">Demo</div>
-                <ul class="menu-list">
-                    <li class="active">Full Demo</li>
-                    <li>Advanced Camera Controls</li>
-                    <li>Advanced Layout Systems</li>
-                    <li>Comprehensive Edge Features</li>
+                <div class="section-title">Demos</div>
+                <ul id="demo-list" class="menu-list">
+                    <!-- Demos will be dynamically inserted here -->
                 </ul>
             </div>
             <div class="sidebar-section">
-                <div class="section-title">Camera Modes Info</div>
+                <div class="section-title">Demo Info</div>
                 <div class="info-box">
-                    <p><strong>Full Demo</strong></p>
-                    <p>This is the original demonstration graph showcasing a variety of node types, edge styles, and interactions available in SpaceGraph.js.</p>
+                    <p><strong id="demo-title"></strong></p>
+                    <p id="demo-description"></p>
                 </div>
             </div>
         </div>
     </div>
     <div id="spacegraph-container"></div>
     <script type="module" src="/main.js"></script>
+    <script type="module">
+        // This script depends on `demoManager` being exposed on the window object in main.js
+        document.addEventListener('DOMContentLoaded', () => {
+            const demoManager = window.demoManager;
+            if (!demoManager) {
+                console.error('DemoManager not found on window object.');
+                return;
+            }
+
+            const demoList = document.getElementById('demo-list');
+            const demoTitle = document.getElementById('demo-title');
+            const demoDescription = document.getElementById('demo-description');
+
+            // Populate the demo list
+            Object.keys(demoManager.demos).forEach(demoName => {
+                const li = document.createElement('li');
+                li.textContent = demoName;
+                li.dataset.demoName = demoName;
+                if (demoManager.activeDemo.name === demoName) {
+                    li.classList.add('active');
+                }
+                demoList.appendChild(li);
+            });
+
+            // Handle demo selection
+            demoList.addEventListener('click', (event) => {
+                if (event.target.tagName === 'LI') {
+                    const demoName = event.target.dataset.demoName;
+                    demoManager.load(demoName);
+                }
+            });
+
+            // Update UI when a demo is loaded
+            window.addEventListener('demo:loaded', ({ detail: demo }) => {
+                demoTitle.textContent = demo.name;
+                demoDescription.textContent = demo.description;
+
+                // Update active state in the list
+                demoList.querySelectorAll('li').forEach(li => {
+                    li.classList.toggle('active', li.dataset.demoName === demo.name);
+                });
+            });
+
+            // Update the initial info box
+            const initialDemo = demoManager.activeDemo;
+            demoTitle.textContent = initialDemo.name;
+            demoDescription.textContent = initialDemo.description;
+        });
+    </script>
 </body>
 </html>

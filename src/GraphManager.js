@@ -97,6 +97,11 @@ class GraphManager extends THREE.EventDispatcher {
             edges: relevantEdges,
         };
     }
+
+    clear() {
+        this.nodes.clear();
+        this.edges.clear();
+    }
 }
 
 export default GraphManager;

@@ -64,6 +64,14 @@ class LayoutManager {
         this.sceneManager.updateLayout(this.simulation.nodes());
     }
 
+    start() {
+        this._updateSimulation();
+    }
+
+    stop() {
+        this.simulation.stop();
+    }
+
     destroy() {
         this.simulation.stop();
         // Unsubscribe from graph events to prevent memory leaks

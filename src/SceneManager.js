@@ -240,6 +240,10 @@ class SceneManager {
         }
     }
 
+    clear() {
+        [...this.elements.keys()].forEach(id => this._removeElement(id));
+    }
+
     setScope(subgraph) {
         const { fadeDuration, outOfScopeOpacity } = this.config.scope;
 

@@ -28,12 +28,14 @@ class SpaceGraph extends THREE.EventDispatcher {
         super();
         this.config = deepMerge(defaultConfig, config);
         this.container = this.config.container;
+        this.scopedNodeId = null;
 
         this._initCamera();
         this._initManagers();
         this._initEventListeners();
 
-        this.config.elements?.forEach(element => this.addElement(element));
+        // Initial elements are now loaded via the DemoManager
+        // this.config.elements?.forEach(element => this.addElement(element));
 
         this.start();
     }
@@ -59,6 +61,7 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.controlsManager.addEventListener('focus', ({ id }) => this.flyTo(id));
         this.controlsManager.addEventListener('defocus', () => this.goBack());
         this.controlsManager.addEventListener('zoom', ({ delta, target }) => this.cameraManager.zoom(target, delta));
+        this.interactionManager.addEventListener('doubleClick', ({ id }) => this.toggleScope(id));
     }
 
     // Public API
@@ -102,6 +105,45 @@ class SpaceGraph extends THREE.EventDispatcher {
 
     goBack() {
         this.cameraManager.goBack();
+    }
+
+    toggleScope(nodeId) {
+        if (!this.scopedNodeId) {
+            // No node is currently scoped, so scope the clicked node
+            const subgraph = this.graphManager.getSubgraph(nodeId);
+            if (subgraph) {
+                this.sceneManager.setScope(subgraph);
+                this.scopedNodeId = nodeId;
+            }
+        } else {
+            // A node is already scoped
+            if (this.scopedNodeId === nodeId || nodeId === null) {
+                // Clicked the same node again or the background, so reset scope
+                this.sceneManager.resetScope();
+                this.scopedNodeId = null;
+            } else {
+                // Clicked a different node, so switch scope
+                this.sceneManager.resetScope();
+                const subgraph = this.graphManager.getSubgraph(nodeId);
+                if (subgraph) {
+                    this.sceneManager.setScope(subgraph);
+                    this.scopedNodeId = nodeId;
+                }
+            }
+        }
+    }
+
+    // Methods for dynamic data loading
+    clear() {
+        this.graphManager.clear();
+        this.sceneManager.clear();
+        this.cameraManager.reset();
+        this.layoutManager.stop();
+    }
+
+    load(elements) {
+        elements.forEach(element => this.addElement(element));
+        this.layoutManager.start();
     }
 
     start() {
