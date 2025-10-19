@@ -17,24 +17,16 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.container = this.config.container;
         this.scopedNodeId = null;
 
-        this._initCamera();
         this._initManagers();
-        this._initEventListeners();
-
-        // Initial elements are now loaded via the DemoManager
-        // this.config.elements?.forEach(element => this.addElement(element));
-
         this.start();
     }
 
-    _initCamera() {
+    _initManagers() {
         const { clientWidth, clientHeight } = this.container;
         const { fov, near, far, initialPosition } = this.config.camera;
         this.camera = new THREE.PerspectiveCamera(fov, clientWidth / clientHeight, near, far);
         this.camera.position.set(initialPosition.x, initialPosition.y, initialPosition.z);
-    }
 
-    _initManagers() {
         this.graphManager = new GraphManager(this.config);
         this.renderer = new Renderer(this.config, this.camera);
         this.sceneManager = new SceneManager(this.config, this.renderer.getScene(), this, this.graphManager);
@@ -43,6 +35,8 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.cameraManager = new CameraManager(this.config, this.camera, this.renderer.getDomElement(), this.controlsManager);
         this.layoutManager = new LayoutManager(this.config, this.graphManager, this.sceneManager);
         this.fisheyeManager = new FisheyeManager(this.config, this.camera, this.sceneManager);
+
+        this._initEventListeners();
     }
 
     _initEventListeners() {

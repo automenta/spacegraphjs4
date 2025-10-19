@@ -26,10 +26,7 @@ class ControlsManager extends THREE.EventDispatcher {
     }
 
     init() {
-        if (this.config.orbit.enabled) {
-            this.orbitControls = new OrbitControls(this.camera, this.domElement);
-            Object.assign(this.orbitControls, this.config.orbit);
-        }
+        this.setOrbitControls(this.config.orbit.enabled);
 
         if (this.config.autoZoom.enabled) {
             this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
@@ -40,8 +37,16 @@ class ControlsManager extends THREE.EventDispatcher {
     }
 
     setOrbitControls(enabled) {
-        if (this.orbitControls) {
-            this.orbitControls.enabled = enabled;
+        if (enabled) {
+            if (!this.orbitControls) {
+                this.orbitControls = new OrbitControls(this.camera, this.domElement);
+                Object.assign(this.orbitControls, this.config.orbit);
+            }
+            this.orbitControls.enabled = true;
+        } else {
+            if (this.orbitControls) {
+                this.orbitControls.enabled = false;
+            }
         }
     }
 
