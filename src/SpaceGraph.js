@@ -9,21 +9,7 @@ import GraphManager from './GraphManager.js';
 import ControlsManager from './ControlsManager.js';
 import FisheyeManager from './FisheyeManager.js';
 import { defaultConfig } from './config.js';
-
-// A simple deep merge function for config objects
-function deepMerge(target, source) {
-    const output = { ...target };
-    if (target && source && typeof target === 'object' && typeof source === 'object') {
-        Object.keys(source).forEach(key => {
-            if (source[key] && typeof source[key] === 'object' && key in target && target[key] && typeof target[key] === 'object') {
-                output[key] = deepMerge(target[key], source[key]);
-            } else {
-                output[key] = source[key];
-            }
-        });
-    }
-    return output;
-}
+import { deepMerge } from './utils.js';
 class SpaceGraph extends THREE.EventDispatcher {
     constructor(config) {
         super();

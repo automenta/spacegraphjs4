@@ -41,10 +41,10 @@ class SceneManager {
     }
 
     createHoverFrame() {
-        const frameGeometry = new THREE.BoxGeometry(1, 1, 1);
-        const frameEdges = new THREE.EdgesGeometry(frameGeometry);
+        // Geometry will be set dynamically, so we start with an empty one.
+        const frameGeometry = new THREE.BufferGeometry();
         const frameMaterial = new THREE.LineBasicMaterial({ color: this.config.scene.hover.color, linewidth: 2 });
-        const frame = new THREE.LineSegments(frameEdges, frameMaterial);
+        const frame = new THREE.LineSegments(frameGeometry, frameMaterial);
         frame.visible = false;
         return frame;
     }
@@ -187,9 +187,33 @@ class SceneManager {
         const targetNode = this.elements.get(edge.userData.target);
         if (!sourceNode || !targetNode) return;
 
+        const sourceSphere = new THREE.Sphere();
+        new THREE.Box3().setFromObject(sourceNode, true).getBoundingSphere(sourceSphere);
+        const sourceCenter = sourceSphere.center;
+        const sourceRadius = sourceSphere.radius;
+
+        const targetSphere = new THREE.Sphere();
+        new THREE.Box3().setFromObject(targetNode, true).getBoundingSphere(targetSphere);
+        const targetCenter = targetSphere.center;
+        const targetRadius = targetSphere.radius;
+
+        const dir = new THREE.Vector3().subVectors(targetCenter, sourceCenter);
+        const distance = dir.length();
+        dir.normalize();
+
+        // If nodes are overlapping or one is inside another, connect centers
+        let startPoint = sourceCenter;
+        let endPoint = targetCenter;
+
+        // A small epsilon prevents z-fighting if nodes are touching
+        if (distance > sourceRadius + targetRadius + 1e-3) {
+            startPoint = sourceCenter.clone().add(dir.clone().multiplyScalar(sourceRadius));
+            endPoint = targetCenter.clone().sub(dir.clone().multiplyScalar(targetRadius));
+        }
+
         const positions = edge.geometry.attributes.position;
-        positions.setXYZ(0, sourceNode.position.x, sourceNode.position.y, sourceNode.position.z);
-        positions.setXYZ(1, targetNode.position.x, targetNode.position.y, targetNode.position.z);
+        positions.setXYZ(0, startPoint.x, startPoint.y, startPoint.z);
+        positions.setXYZ(1, endPoint.x, endPoint.y, endPoint.z);
         positions.needsUpdate = true;
         if (edge.material.isLineDashedMaterial) {
             edge.computeLineDistances();
@@ -207,22 +231,34 @@ class SceneManager {
     setHovered(elementId, isHovered) {
         const element = this.elements.get(elementId);
 
-        if (!element) {
+        if (!element || !isHovered) {
             this.hoverFrame.visible = false;
             return;
         }
 
-        if (isHovered) {
-            const box = new THREE.Box3().setFromObject(element);
-            const size = box.getSize(new THREE.Vector3());
-            const center = box.getCenter(new THREE.Vector3());
+        const box = new THREE.Box3().setFromObject(element, true);
+        const size = box.getSize(new THREE.Vector3());
 
-            this.hoverFrame.scale.set(size.x, size.y, size.z).multiplyScalar(this.config.scene.hover.scale);
-            this.hoverFrame.position.copy(center);
-            this.hoverFrame.visible = true;
-        } else {
+        // Check if the object has a valid, non-zero size
+        if (size.x === 0 && size.y === 0 && size.z === 0) {
             this.hoverFrame.visible = false;
+            return;
         }
+        const center = box.getCenter(new THREE.Vector3());
+
+        // Dispose of the old geometry to prevent memory leaks
+        if (this.hoverFrame.geometry) {
+            this.hoverFrame.geometry.dispose();
+        }
+
+        // Create a new geometry that matches the bounding box
+        const frameGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+        const frameEdges = new THREE.EdgesGeometry(frameGeometry);
+
+        this.hoverFrame.geometry = frameEdges;
+        this.hoverFrame.position.copy(center);
+        this.hoverFrame.scale.set(1, 1, 1).multiplyScalar(this.config.scene.hover.scale); // Reset scale before applying
+        this.hoverFrame.visible = true;
     }
 
     destroy() {

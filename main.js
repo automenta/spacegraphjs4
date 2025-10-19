@@ -7,6 +7,7 @@ import CoreConcepts from './demos/CoreConcepts.js';
 import Interaction from './demos/Interaction.js';
 import { fullDemo } from './demos/_DemoData.js';
 import { kitchenSink } from './demos/KitchenSink.js';
+import { GeometricAccuracy } from './demos/GeometricAccuracy.js';
 
 const container = document.getElementById('spacegraph-container');
 
@@ -34,6 +35,7 @@ demoManager.register('Kitchen Sink', kitchenSink);
 demoManager.register('Full Demo', fullDemo);
 demoManager.register('Core Concepts', CoreConcepts);
 demoManager.register('Interaction', Interaction);
+demoManager.register('Geometric Accuracy', GeometricAccuracy);
 
 // Load the initial demo
 demoManager.load('Full Demo').then(() => {

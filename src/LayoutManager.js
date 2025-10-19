@@ -39,6 +39,15 @@ class LayoutManager {
         const nodes = this.graphManager.getNodes();
         const edges = this.graphManager.getEdges();
 
+        // Set fixed positions on nodes before starting the simulation
+        nodes.forEach(node => {
+            if (node.position) {
+                node.fx = node.position.x;
+                node.fy = node.position.y;
+                node.fz = node.position.z;
+            }
+        });
+
         this.simulation.nodes(nodes);
         this.simulation.force('link').links(edges);
         this.simulation.alpha(this.config.alpha).restart();
@@ -61,7 +70,16 @@ class LayoutManager {
     }
 
     _onTick() {
-        this.sceneManager.updateLayout(this.simulation.nodes());
+        const nodes = this.simulation.nodes();
+
+        // Respect fixed positions
+        nodes.forEach(node => {
+            if (node.fx !== undefined) node.x = node.fx;
+            if (node.fy !== undefined) node.y = node.fy;
+            if (node.fz !== undefined) node.z = node.fz;
+        });
+
+        this.sceneManager.updateLayout(nodes);
     }
 
     start() {
