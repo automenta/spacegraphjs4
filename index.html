@@ -255,10 +255,10 @@
             });
 
             // Handle demo selection
-            demoList.addEventListener('click', (event) => {
+            demoList.addEventListener('click', async (event) => {
                 if (event.target.tagName === 'LI') {
                     const demoName = event.target.dataset.demoName;
-                    demoManager.load(demoName);
+                    await demoManager.load(demoName);
                 }
             });
 

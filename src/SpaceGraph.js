@@ -7,6 +7,7 @@ import InteractionManager from './InteractionManager.js';
 import LayoutManager from './LayoutManager.js';
 import GraphManager from './GraphManager.js';
 import ControlsManager from './ControlsManager.js';
+import FisheyeManager from './FisheyeManager.js';
 import { defaultConfig } from './config.js';
 
 // A simple deep merge function for config objects
@@ -55,6 +56,7 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.controlsManager = new ControlsManager(this.config, this.camera, this.renderer.getDomElement(), this.sceneManager, this.interactionManager, this.graphManager);
         this.cameraManager = new CameraManager(this.config, this.camera, this.renderer.getDomElement(), this.controlsManager);
         this.layoutManager = new LayoutManager(this.config, this.graphManager, this.sceneManager);
+        this.fisheyeManager = new FisheyeManager(this.config, this.camera, this.sceneManager);
     }
 
     _initEventListeners() {
@@ -151,6 +153,7 @@ class SpaceGraph extends THREE.EventDispatcher {
             TWEEN.update(time);
             this.cameraManager.update(time);
             this.controlsManager.update();
+            this.fisheyeManager.update();
             this.renderer.render();
         });
     }
@@ -163,6 +166,7 @@ class SpaceGraph extends THREE.EventDispatcher {
         this.layoutManager.destroy();
         this.graphManager.destroy();
         this.controlsManager.destroy();
+        this.fisheyeManager.destroy();
 
         if (this._listeners) {
             Object.keys(this._listeners).forEach(type => delete this._listeners[type]);

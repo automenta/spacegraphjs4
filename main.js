@@ -5,12 +5,7 @@ import DemoManager from './src/DemoManager.js';
 import CoreConcepts from './demos/CoreConcepts.js';
 import Interaction from './demos/Interaction.js';
 import { fullDemo } from './demos/_DemoData.js';
-
-const demos = {
-    'Full Demo': fullDemo,
-    'Core Concepts': CoreConcepts,
-    'Interaction': Interaction,
-};
+import { kitchenSink } from './demos/KitchenSink.js';
 
 const container = document.getElementById('spacegraph-container');
 
@@ -31,7 +26,15 @@ const graph = new SpaceGraph({
 });
 
 // Create and initialize the DemoManager
-const demoManager = new DemoManager(graph, demos);
+const demoManager = new DemoManager(graph);
+
+// Register demos
+demoManager.register('Kitchen Sink', kitchenSink);
+demoManager.register('Full Demo', fullDemo);
+demoManager.register('Core Concepts', CoreConcepts);
+demoManager.register('Interaction', Interaction);
+
+// Load the initial demo
 demoManager.load('Full Demo');
 
 

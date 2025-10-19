@@ -1,13 +1,17 @@
 // src/DemoManager.js
 
 class DemoManager {
-    constructor(graph, demos) {
+    constructor(graph) {
         this.graph = graph;
-        this.demos = demos;
+        this.demos = {};
         this.activeDemo = null;
     }
 
-    load(demoName) {
+    register(name, demoData) {
+        this.demos[name] = { ...demoData, name };
+    }
+
+    async load(demoName) {
         const demo = this.demos[demoName];
         if (!demo) {
             console.error(`Demo "${demoName}" not found.`);
@@ -15,7 +19,15 @@ class DemoManager {
         }
 
         this.graph.clear();
-        this.graph.load(demo.elements);
+
+        let elements;
+        if (typeof demo.elements === 'function') {
+            elements = await demo.elements();
+        } else {
+            elements = demo.elements;
+        }
+
+        this.graph.load(elements);
         this.activeDemo = demo;
 
         // Dispatch an event to notify the UI of the change

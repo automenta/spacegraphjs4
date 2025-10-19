@@ -29,6 +29,11 @@ export const defaultConfig = {
         fadeDuration: 250, // ms
         outOfScopeOpacity: 0.1,
     },
+    fisheye: {
+        enabled: false,
+        strength: 2.0,
+        radius: 500,
+    },
     styles: {
         default: {
             node: {

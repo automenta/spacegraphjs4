@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // Simple deep merge for styles
 function deepMerge(target, source) {
@@ -20,7 +21,6 @@ const nodeCreators = {
     html: (data, style) => {
         const element = document.createElement('div');
         element.innerHTML = data.htmlContent || style.htmlContent;
-        // Note: Further style application (e.g., classes, inline styles) could be added here
         const object = new CSS3DObject(element);
         object.userData = { id: data.id, type: 'html' };
         return object;
@@ -36,7 +36,57 @@ const nodeCreators = {
         object.userData = { id: data.id, type: 'box' };
         return object;
     },
-    // Future creators like 'sphere', 'sprite' can be added here
+    sphere: (data, style) => {
+        const geometry = new THREE.SphereGeometry(style.size / 2, 32, 32);
+        const material = new THREE.MeshStandardMaterial({
+            color: style.color,
+            transparent: true,
+            opacity: 1,
+        });
+        const object = new THREE.Mesh(geometry, material);
+        object.userData = { id: data.id, type: 'sphere' };
+        return object;
+    },
+    sprite: (data, style) => {
+        const texture = new THREE.TextureLoader().load(data.imageUrl);
+        const material = new THREE.SpriteMaterial({ map: texture, color: style.color });
+        const object = new THREE.Sprite(material);
+        object.scale.set(style.size, style.size, style.size);
+        object.userData = { id: data.id, type: 'sprite' };
+        return object;
+    },
+    gltf: (data, style) => {
+        const loader = new GLTFLoader();
+        const object = new THREE.Object3D();
+        loader.load(data.gltfUrl, (gltf) => {
+            gltf.scene.scale.set(style.size, style.size, style.size);
+            object.add(gltf.scene);
+        });
+        object.userData = { id: data.id, type: 'gltf' };
+        return object;
+    },
+    image: (data, style) => {
+        const geometry = new THREE.PlaneGeometry(style.size, style.size);
+        const texture = new THREE.TextureLoader().load(data.imageUrl);
+        const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+        const object = new THREE.Mesh(geometry, material);
+        object.userData = { id: data.id, type: 'image' };
+        return object;
+    },
+    video: (data, style) => {
+        const video = document.createElement('video');
+        video.src = data.videoUrl;
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.play();
+        const texture = new THREE.VideoTexture(video);
+        const geometry = new THREE.PlaneGeometry(style.size, style.size);
+        const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+        const object = new THREE.Mesh(geometry, material);
+        object.userData = { id: data.id, type: 'video' };
+        return object;
+    }
 };
 
 class ObjectFactory {
