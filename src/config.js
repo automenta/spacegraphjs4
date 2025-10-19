@@ -6,6 +6,9 @@ export const defaultConfig = {
         fov: 45,
         animationDuration: 500,
         zoomSpeed: 0.002,
+        zoom: {
+            padding: 1.2, // Tighter frame
+        },
     },
     controls: {
         orbit: {

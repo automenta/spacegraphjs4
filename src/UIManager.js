@@ -22,7 +22,7 @@ class UIManager {
         this.populateDemoList();
         this.addEventListeners();
         this.updateDemoInfo(this.demoManager.activeDemo);
-        this.createSettings();
+        this.recreateSettings(this.demoManager.activeDemo);
     }
 
     populateDemoList() {
@@ -48,6 +48,7 @@ class UIManager {
         window.addEventListener('demo:loaded', ({ detail: demo }) => {
             this.updateDemoInfo(demo);
             this.updateActiveListItem(demo.name);
+            this.recreateSettings(demo);
         });
     }
 
@@ -84,6 +85,19 @@ class UIManager {
 
         container.appendChild(label);
         container.appendChild(document.createElement('br')); // For spacing
+    }
+
+    recreateSettings(demo) {
+        const controlsContainer = document.getElementById('settings-panel');
+        controlsContainer.innerHTML = ''; // Clear existing controls
+
+        if (demo && typeof demo.postLoad === 'function') {
+            // Demo-specific controls
+            demo.postLoad(this.graph);
+        } else {
+            // Default controls
+            this.createSettings();
+        }
     }
 
     createSettings() {

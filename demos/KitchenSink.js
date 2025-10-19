@@ -61,5 +61,5 @@ export const kitchenSink = {
         { id: 'edge-9', source: 'box-node', target: 'sphere-node', type: 'edge', dashed: true, color: 0xffff00 },
         { id: 'edge-10', source: 'image-node', target: 'video-node', type: 'edge', color: 0xff00ff },
         { id: 'edge-11', source: 'html-node-1', target: 'html-node-2', type: 'edge', dashed: true, color: 0x00ffff },
-    ],
+    ]
 };

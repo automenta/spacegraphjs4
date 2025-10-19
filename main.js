@@ -8,6 +8,7 @@ import Interaction from './demos/Interaction.js';
 import { fullDemo } from './demos/_DemoData.js';
 import { kitchenSink } from './demos/KitchenSink.js';
 import { GeometricAccuracy } from './demos/GeometricAccuracy.js';
+import { DynamicControls } from './demos/DynamicControls.js';
 
 const container = document.getElementById('spacegraph-container');
 
@@ -31,6 +32,7 @@ const graph = new SpaceGraph({
 const demoManager = new DemoManager(graph);
 
 // Register demos
+demoManager.register('Dynamic Controls', DynamicControls);
 demoManager.register('Kitchen Sink', kitchenSink);
 demoManager.register('Full Demo', fullDemo);
 demoManager.register('Core Concepts', CoreConcepts);
