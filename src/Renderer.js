@@ -96,6 +96,10 @@ class Renderer {
         return this.cssPointerEventsContainer;
     }
 
+    getBloom() {
+        return this.bloomPass ? this.bloomPass.enabled : false;
+    }
+
     setBloom(enabled) {
         if (this.bloomPass) {
             this.bloomPass.enabled = enabled;

@@ -102,28 +102,32 @@ class UIManager {
 
     createSettings() {
         // Fisheye Toggle
-        this.createToggle(
-            'Fisheye Effect',
-            this.graph.fisheyeManager.isEnabled(),
-            (isChecked) => {
-                this.graph.setFisheye(isChecked);
-            }
-        );
+        if (this.graph.fisheyeManager) {
+            this.createToggle(
+                'Fisheye Effect',
+                this.graph.fisheyeManager.isEnabled(),
+                (isChecked) => {
+                    this.graph.setFisheye(isChecked);
+                }
+            );
+        }
 
         // Bloom Toggle
-        this.createToggle(
-            'Bloom Effect',
-            this.graph.renderer.bloomPass.enabled,
-            (isChecked) => {
-                this.graph.setBloom(isChecked);
-            }
-        );
+        if (this.graph.renderer) {
+            this.createToggle(
+                'Bloom Effect',
+                this.graph.getBloom(),
+                (isChecked) => {
+                    this.graph.setBloom(isChecked);
+                }
+            );
+        }
 
         // Orbit Controls Toggle
-        if (this.graph.controlsManager.orbitControls) {
+        if (this.graph.controlsManager) {
             this.createToggle(
                 'Orbit Controls',
-                this.graph.controlsManager.orbitControls.enabled,
+                this.graph.getOrbitControls(),
                 (isChecked) => {
                     this.graph.setOrbitControls(isChecked);
                 }
@@ -131,13 +135,15 @@ class UIManager {
         }
 
         // AutoZoom Toggle
-        this.createToggle(
-            'AutoZoom',
-            this.graph.controlsManager.autoZoomEnabled,
-            (isChecked) => {
-                this.graph.setAutoZoom(isChecked);
-            }
-        );
+        if (this.graph.controlsManager) {
+            this.createToggle(
+                'AutoZoom',
+                this.graph.controlsManager.autoZoomEnabled,
+                (isChecked) => {
+                    this.graph.setAutoZoom(isChecked);
+                }
+            );
+        }
     }
 }
 

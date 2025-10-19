@@ -122,8 +122,16 @@ class SpaceGraph extends THREE.EventDispatcher {
     }
 
     // Methods for dynamic data loading
+    getBloom() {
+        return this.renderer.getBloom();
+    }
+
     setBloom(enabled) {
         this.renderer.setBloom(enabled);
+    }
+
+    getOrbitControls() {
+        return this.controlsManager.getOrbitControls();
     }
 
     setOrbitControls(enabled) {

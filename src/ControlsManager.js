@@ -36,6 +36,10 @@ class ControlsManager extends THREE.EventDispatcher {
         this.interactionManager.addEventListener('doubleClick', this._onDoubleClick);
     }
 
+    getOrbitControls() {
+        return this.orbitControls ? this.orbitControls.enabled : false;
+    }
+
     setOrbitControls(enabled) {
         if (enabled) {
             if (!this.orbitControls) {
