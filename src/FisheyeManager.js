@@ -13,14 +13,31 @@ class FisheyeManager {
         this.camera = camera;
         this.sceneManager = sceneManager;
         this.originalPositions = new Map();
+        // The effect is now disabled by default until enable() is called.
+        this.config.enabled = false;
     }
 
     /**
-     * Checks if the fisheye effect is enabled in the configuration.
+     * Checks if the fisheye effect is enabled.
      * @returns {boolean}
      */
     isEnabled() {
         return this.config.enabled;
+    }
+
+    /**
+     * Enables the fisheye effect.
+     */
+    enable() {
+        this.config.enabled = true;
+    }
+
+    /**
+     * Disables the fisheye effect and restores original positions.
+     */
+    disable() {
+        this.config.enabled = false;
+        this.restorePositions();
     }
 
     /**

@@ -96,6 +96,12 @@ class Renderer {
         return this.cssPointerEventsContainer;
     }
 
+    setBloom(enabled) {
+        if (this.bloomPass) {
+            this.bloomPass.enabled = enabled;
+        }
+    }
+
     setBackgroundColor(color) {
         this.scene.background = new THREE.Color(color);
     }

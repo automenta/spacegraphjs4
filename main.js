@@ -1,5 +1,6 @@
 import SpaceGraph from './src/SpaceGraph.js';
 import DemoManager from './src/DemoManager.js';
+import UIManager from './src/UIManager.js';
 
 // Import Demos
 import CoreConcepts from './demos/CoreConcepts.js';
@@ -35,7 +36,11 @@ demoManager.register('Core Concepts', CoreConcepts);
 demoManager.register('Interaction', Interaction);
 
 // Load the initial demo
-demoManager.load('Full Demo');
+demoManager.load('Full Demo').then(() => {
+    // Initialize the UIManager after the first demo is loaded
+    const uiManager = new UIManager(demoManager, graph);
+    window.uiManager = uiManager;
+});
 
 
 // Expose the graph class and instance to the window for easy debugging and testing

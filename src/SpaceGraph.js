@@ -136,6 +136,26 @@ class SpaceGraph extends THREE.EventDispatcher {
     }
 
     // Methods for dynamic data loading
+    setBloom(enabled) {
+        this.renderer.setBloom(enabled);
+    }
+
+    setOrbitControls(enabled) {
+        this.controlsManager.setOrbitControls(enabled);
+    }
+
+    setAutoZoom(enabled) {
+        this.controlsManager.setAutoZoom(enabled);
+    }
+
+    setFisheye(enabled) {
+        if (enabled) {
+            this.fisheyeManager.enable();
+        } else {
+            this.fisheyeManager.disable();
+        }
+    }
+
     clear() {
         this.graphManager.clear();
         this.sceneManager.clear();

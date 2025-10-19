@@ -13,6 +13,7 @@ class ControlsManager extends THREE.EventDispatcher {
         this.orbitControls = null;
         this.focusedElementId = null;
         this.scopedElementId = null;
+        this.autoZoomEnabled = config.controls.autoZoom.enabled;
 
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
@@ -36,6 +37,21 @@ class ControlsManager extends THREE.EventDispatcher {
 
         this.interactionManager.addEventListener('click', this._onClick);
         this.interactionManager.addEventListener('doubleClick', this._onDoubleClick);
+    }
+
+    setOrbitControls(enabled) {
+        if (this.orbitControls) {
+            this.orbitControls.enabled = enabled;
+        }
+    }
+
+    setAutoZoom(enabled) {
+        this.autoZoomEnabled = enabled;
+        if (enabled) {
+            this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
+        } else {
+            this.domElement.removeEventListener('wheel', this._onWheel);
+        }
     }
 
     _onClick({ id }) {
