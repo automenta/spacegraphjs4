@@ -26,18 +26,14 @@ class FisheyeManager {
     }
 
     /**
-     * Enables the fisheye effect.
+     * Enables or disables the fisheye effect.
+     * @param {boolean} enabled
      */
-    enable() {
-        this.config.enabled = true;
-    }
-
-    /**
-     * Disables the fisheye effect and restores original positions.
-     */
-    disable() {
-        this.config.enabled = false;
-        this.restorePositions();
+    setEnabled(enabled) {
+        this.config.enabled = enabled;
+        if (!enabled) {
+            this.restorePositions();
+        }
     }
 
     /**

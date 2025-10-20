@@ -8,9 +8,10 @@ class UIManager {
             demoList: document.getElementById('demo-list'),
             demoTitle: document.getElementById('demo-title'),
             demoDescription: document.getElementById('demo-description'),
+            settingsPanel: document.getElementById('settings-panel'),
         };
 
-        if (!this.dom.demoList || !this.dom.demoTitle || !this.dom.demoDescription) {
+        if (Object.values(this.dom).some(el => !el)) {
             console.error('UI elements not found in the DOM.');
             return;
         }
@@ -30,7 +31,7 @@ class UIManager {
             const li = document.createElement('li');
             li.textContent = demoName;
             li.dataset.demoName = demoName;
-            if (this.demoManager.activeDemo && this.demoManager.activeDemo.name === demoName) {
+            if (this.demoManager.activeDemo?.name === demoName) {
                 li.classList.add('active');
             }
             this.dom.demoList.appendChild(li);
@@ -40,8 +41,7 @@ class UIManager {
     addEventListeners() {
         this.dom.demoList.addEventListener('click', async (event) => {
             if (event.target.tagName === 'LI') {
-                const demoName = event.target.dataset.demoName;
-                await this.demoManager.load(demoName);
+                await this.demoManager.load(event.target.dataset.demoName);
             }
         });
 
@@ -53,10 +53,9 @@ class UIManager {
     }
 
     updateDemoInfo(demo) {
-        if (demo) {
-            this.dom.demoTitle.textContent = demo.name;
-            this.dom.demoDescription.textContent = demo.description;
-        }
+        if (!demo) return;
+        this.dom.demoTitle.textContent = demo.name;
+        this.dom.demoDescription.textContent = demo.description;
     }
 
     updateActiveListItem(activeDemoName) {
@@ -65,11 +64,35 @@ class UIManager {
         });
     }
 
-    createToggle(labelText, isChecked, onChange) {
-        const container = document.getElementById('settings-panel');
+    recreateSettings(demo) {
+        this.dom.settingsPanel.innerHTML = '';
+        if (demo?.postLoad) {
+            demo.postLoad(this.graph);
+        } else {
+            this.createSettingsFromConfig(this.graph.config);
+        }
+    }
 
-        const label = document.createElement('label');
-        label.className = 'toggle-switch';
+    createSettingsFromConfig(config) {
+        for (const key in config) {
+            if (typeof config[key] === 'object' && config[key] !== null) {
+                if (config[key].ui) {
+                    this.createToggle(config[key].ui);
+                } else {
+                    this.createSettingsFromConfig(config[key]);
+                }
+            }
+        }
+    }
+
+    createToggle({ label, type, setter, getter }) {
+        if (type !== 'toggle') return;
+
+        const isChecked = this.graph[getter] ? this.graph[getter]() : false;
+        const onChange = (isChecked) => this.graph[setter] && this.graph[setter](isChecked);
+
+        const labelEl = document.createElement('label');
+        labelEl.className = 'toggle-switch';
 
         const input = document.createElement('input');
         input.type = 'checkbox';
@@ -79,71 +102,12 @@ class UIManager {
         const slider = document.createElement('span');
         slider.className = 'slider';
 
-        label.appendChild(input);
-        label.appendChild(slider);
-        label.appendChild(document.createTextNode(` ${labelText}`));
+        labelEl.appendChild(input);
+        labelEl.appendChild(slider);
+        labelEl.appendChild(document.createTextNode(` ${label}`));
 
-        container.appendChild(label);
-        container.appendChild(document.createElement('br')); // For spacing
-    }
-
-    recreateSettings(demo) {
-        const controlsContainer = document.getElementById('settings-panel');
-        controlsContainer.innerHTML = ''; // Clear existing controls
-
-        if (demo && typeof demo.postLoad === 'function') {
-            // Demo-specific controls
-            demo.postLoad(this.graph);
-        } else {
-            // Default controls
-            this.createSettings();
-        }
-    }
-
-    createSettings() {
-        // Fisheye Toggle
-        if (this.graph.fisheyeManager) {
-            this.createToggle(
-                'Fisheye Effect',
-                this.graph.fisheyeManager.isEnabled(),
-                (isChecked) => {
-                    this.graph.setFisheye(isChecked);
-                }
-            );
-        }
-
-        // Bloom Toggle
-        if (this.graph.renderer) {
-            this.createToggle(
-                'Bloom Effect',
-                this.graph.getBloom(),
-                (isChecked) => {
-                    this.graph.setBloom(isChecked);
-                }
-            );
-        }
-
-        // Orbit Controls Toggle
-        if (this.graph.controlsManager) {
-            this.createToggle(
-                'Orbit Controls',
-                this.graph.getOrbitControls(),
-                (isChecked) => {
-                    this.graph.setOrbitControls(isChecked);
-                }
-            );
-        }
-
-        // AutoZoom Toggle
-        if (this.graph.controlsManager) {
-            this.createToggle(
-                'AutoZoom',
-                this.graph.controlsManager.autoZoomEnabled,
-                (isChecked) => {
-                    this.graph.setAutoZoom(isChecked);
-                }
-            );
-        }
+        this.dom.settingsPanel.appendChild(labelEl);
+        this.dom.settingsPanel.appendChild(document.createElement('br'));
     }
 }
 

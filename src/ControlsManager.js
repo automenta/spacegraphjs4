@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 class ControlsManager extends THREE.EventDispatcher {
-    constructor(config, camera, domElement, sceneManager, interactionManager, graphManager) {
+    constructor(config, camera, sceneManager, interactionManager, graphManager, renderer) {
         super();
         this.config = config.controls;
         this.camera = camera;
-        this.domElement = domElement;
+        this.domElement = renderer.getDomElement();
         this.sceneManager = sceneManager;
         this.interactionManager = interactionManager;
         this.graphManager = graphManager;
@@ -19,9 +19,6 @@ class ControlsManager extends THREE.EventDispatcher {
         this.mouse = new THREE.Vector2();
 
         this._onWheel = this._onWheel.bind(this);
-        this._onClick = this._onClick.bind(this);
-        this._onDoubleClick = this._onDoubleClick.bind(this);
-
         this.init();
     }
 
@@ -31,13 +28,14 @@ class ControlsManager extends THREE.EventDispatcher {
         if (this.config.autoZoom.enabled) {
             this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
         }
-
-        this.interactionManager.addEventListener('click', this._onClick);
-        this.interactionManager.addEventListener('doubleClick', this._onDoubleClick);
     }
 
-    getOrbitControls() {
+    isOrbitControlsEnabled() {
         return this.orbitControls ? this.orbitControls.enabled : false;
+    }
+
+    isAutoZoomEnabled() {
+        return this.autoZoomEnabled;
     }
 
     setOrbitControls(enabled) {
@@ -60,18 +58,6 @@ class ControlsManager extends THREE.EventDispatcher {
             this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
         } else {
             this.domElement.removeEventListener('wheel', this._onWheel);
-        }
-    }
-
-    _onClick({ id }) {
-        if (id) {
-            if (this.focusedElementId === id) {
-                this.defocus();
-            } else {
-                this.focus(id);
-            }
-        } else if (this.focusedElementId) {
-            this.defocus();
         }
     }
 
@@ -113,56 +99,11 @@ class ControlsManager extends THREE.EventDispatcher {
         }
     }
 
-    focus(id) {
-        if (this.focusedElementId === id) return;
-        this.focusedElementId = id;
-        this.dispatchEvent({ type: 'focus', id });
-    }
-
-    defocus() {
-        const id = this.focusedElementId;
-        if (!id) return;
-        this.focusedElementId = null;
-        this.dispatchEvent({ type: 'defocus', id });
-    }
-
-    _onDoubleClick({ id }) {
-        if (!id) {
-            if (this.scopedElementId) {
-                this.unscope();
-            }
-            return;
-        }
-
-        if (this.scopedElementId === id) {
-            this.unscope();
-        } else {
-            this.scope(id);
-        }
-    }
-
     destroy() {
         if (this.orbitControls) {
             this.orbitControls.dispose();
         }
         this.domElement.removeEventListener('wheel', this._onWheel);
-        this.interactionManager.removeEventListener('click', this._onClick);
-        this.interactionManager.removeEventListener('doubleClick', this._onDoubleClick);
-    }
-
-    scope(id) {
-        if (this.scopedElementId === id) return;
-        const subgraph = this.graphManager.getSubgraph(id);
-        if (subgraph) {
-            this.scopedElementId = id;
-            this.sceneManager.setScope(subgraph);
-        }
-    }
-
-    unscope() {
-        if (!this.scopedElementId) return;
-        this.scopedElementId = null;
-        this.sceneManager.resetScope();
     }
 }
 

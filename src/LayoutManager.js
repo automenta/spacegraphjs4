@@ -1,10 +1,10 @@
 import * as d3 from 'd3-force-3d';
 
 class LayoutManager {
-    constructor(config, graphManager, sceneManager) {
+    constructor(config, graph, scene) {
         this.config = config.layout;
-        this.graphManager = graphManager;
-        this.sceneManager = sceneManager;
+        this.graphManager = graph;
+        this.sceneManager = scene;
 
         // Bind event handlers once
         this._onNodeAddedHandler = this._onNodeAdded.bind(this);

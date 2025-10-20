@@ -15,21 +15,23 @@ const container = document.getElementById('spacegraph-container');
 // Create the SpaceGraph instance without initial elements
 const graph = new SpaceGraph({
     container,
-    backgroundColor: 0x111111,
-    bloom: {
-        enabled: true,
-        strength: 0.8,
-        radius: 0.5,
-        threshold: 0.1
+    renderer: {
+        backgroundColor: '#111111',
+        bloom: {
+            enabled: true,
+            strength: 0.8,
+            radius: 0.5,
+            threshold: 0.1,
+        },
     },
     controls: {
         orbit: {
-            enabled: true
+            enabled: true,
         },
         autoZoom: {
-            enabled: true
-        }
-    }
+            enabled: true,
+        },
+    },
 });
 
 // Create and initialize the DemoManager

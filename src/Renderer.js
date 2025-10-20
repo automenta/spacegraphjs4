@@ -5,9 +5,9 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 class Renderer {
-    constructor(config, camera) {
+    constructor(config, camera, container) {
         this.config = config.renderer;
-        this.container = config.container;
+        this.container = container;
         this.scene = new THREE.Scene();
         this.camera = camera;
 
@@ -96,7 +96,7 @@ class Renderer {
         return this.cssPointerEventsContainer;
     }
 
-    getBloom() {
+    isBloomEnabled() {
         return this.bloomPass ? this.bloomPass.enabled : false;
     }
 

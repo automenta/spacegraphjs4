@@ -4,11 +4,11 @@ import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import ObjectFactory from './ObjectFactory.js';
 
 class SceneManager {
-    constructor(config, scene, eventDispatcher, graphManager) {
+    constructor(config, renderer, graph, SpaceGraph) {
         this.config = config;
-        this.scene = scene;
-        this.eventDispatcher = eventDispatcher;
-        this.graphManager = graphManager;
+        this.scene = renderer.getScene();
+        this.graphManager = graph;
+        this.eventDispatcher = SpaceGraph;
         this.elements = new Map(); // Visual objects
         this.objectFactory = new ObjectFactory(config.styles);
 

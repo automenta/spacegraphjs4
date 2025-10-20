@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 
 class InteractionManager extends THREE.EventDispatcher {
-    constructor(config, camera, domElement, sceneManager) {
+    constructor(config, camera, scene, renderer) {
         super();
         this.config = config;
         this.camera = camera;
-        this.domElement = domElement;
-        this.sceneManager = sceneManager;
+        this.sceneManager = scene;
+        this.domElement = renderer.getDomElement();
 
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
