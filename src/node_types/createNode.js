@@ -11,9 +11,8 @@ import * as THREE from 'three';
 export function createNode(element, object) {
     object.userData = { ...element };
 
-    if (element.position) {
-        object.position.set(element.position.x, element.position.y, element.position.z);
-    }
+    // Set a default position. LayoutManager will override this.
+    object.position.set(0, 0, 0);
 
     if (element.scale) {
         if (typeof element.scale === 'number') {

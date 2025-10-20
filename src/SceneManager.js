@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
-import ObjectFactory from './ObjectFactory.js';
+import ElementFactory from './ElementFactory.js';
 import { disposeObject } from './utils.js';
 
 class SceneManager {
@@ -12,7 +12,7 @@ class SceneManager {
         this.eventDispatcher = SpaceGraph;
         this.animationManager = animationManager;
         this.elements = new Map(); // Visual objects
-        this.objectFactory = new ObjectFactory(config.styles);
+        this.elementFactory = new ElementFactory(config.styles);
 
         this._addLighting();
 
@@ -73,48 +73,13 @@ class SceneManager {
             return;
         }
 
-        let object;
-        if (element.type === 'edge') {
-            object = this._createEdge(element);
-        } else {
-            object = this.objectFactory.create(element);
-        }
+        const object = this.elementFactory.create(element, this.elements);
 
         if (object) {
             this.elements.set(element.id, object);
             this.scene.add(object);
         }
     }
-
-    _createEdge(edgeData) {
-        const sourceNode = this.elements.get(edgeData.source);
-        const targetNode = this.elements.get(edgeData.target);
-
-        if (!sourceNode || !targetNode) {
-            console.warn(`Edge ${edgeData.id} cannot be created: source or target node not found yet.`);
-            return null;
-        }
-
-        // Use dummy points for initialization; _updateEdgeGeometry will set the correct points.
-        const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
-
-        const defaultStyle = this.config.styles.default.edge;
-        const color = edgeData.color || defaultStyle.color;
-        const dashed = edgeData.dashed !== undefined ? edgeData.dashed : defaultStyle.dashed;
-
-        const material = dashed
-            ? new THREE.LineDashedMaterial({ color, dashSize: 0.5, gapSize: 0.2 })
-            : new THREE.LineBasicMaterial({ color });
-
-        const line = new THREE.Line(geometry, material);
-        line.userData = { ...edgeData, type: 'edge' };
-
-        // Set the correct geometry immediately upon creation.
-        this._updateEdgeGeometry(line);
-
-        return line;
-    }
-
 
     _removeElement(elementId) {
         const object = this.elements.get(elementId);
@@ -137,13 +102,7 @@ class SceneManager {
             this.updateConnectedEdges(elementId);
         }
 
-        if (props.color && object.material && object.material.color) {
-            object.material.color.set(props.color);
-        }
-
-        if (props.htmlContent && object instanceof CSS3DObject) {
-            object.element.innerHTML = props.htmlContent;
-        }
+        this.elementFactory.update(object, props);
     }
 
     updateLayout(simulationNodes) {
@@ -158,53 +117,15 @@ class SceneManager {
         // Update edge geometries to reflect new node positions
         this.elements.forEach(element => {
             if (element.userData.type === 'edge') {
-                this._updateEdgeGeometry(element);
+                this.elementFactory._updateEdgeGeometry(element, this.elements.get(element.userData.source), this.elements.get(element.userData.target));
             }
         });
-    }
-
-    _updateEdgeGeometry(edge) {
-        const sourceNode = this.elements.get(edge.userData.source);
-        const targetNode = this.elements.get(edge.userData.target);
-        if (!sourceNode || !targetNode) return;
-
-        const sourceSphere = new THREE.Sphere();
-        new THREE.Box3().setFromObject(sourceNode, true).getBoundingSphere(sourceSphere);
-        const sourceCenter = sourceSphere.center;
-        const sourceRadius = sourceSphere.radius;
-
-        const targetSphere = new THREE.Sphere();
-        new THREE.Box3().setFromObject(targetNode, true).getBoundingSphere(targetSphere);
-        const targetCenter = targetSphere.center;
-        const targetRadius = targetSphere.radius;
-
-        const dir = new THREE.Vector3().subVectors(targetCenter, sourceCenter);
-        const distance = dir.length();
-        dir.normalize();
-
-        // If nodes are overlapping or one is inside another, connect centers
-        let startPoint = sourceCenter;
-        let endPoint = targetCenter;
-
-        // A small epsilon prevents z-fighting if nodes are touching
-        if (distance > sourceRadius + targetRadius + 1e-3) {
-            startPoint = sourceCenter.clone().add(dir.clone().multiplyScalar(sourceRadius));
-            endPoint = targetCenter.clone().sub(dir.clone().multiplyScalar(targetRadius));
-        }
-
-        const positions = edge.geometry.attributes.position;
-        positions.setXYZ(0, startPoint.x, startPoint.y, startPoint.z);
-        positions.setXYZ(1, endPoint.x, endPoint.y, endPoint.z);
-        positions.needsUpdate = true;
-        if (edge.material.isLineDashedMaterial) {
-            edge.computeLineDistances();
-        }
     }
 
     updateConnectedEdges(nodeId) {
         this.elements.forEach(element => {
             if (element.userData.type === 'edge' && (element.userData.source === nodeId || element.userData.target === nodeId)) {
-                this._updateEdgeGeometry(element);
+                this.elementFactory._updateEdgeGeometry(element, this.elements.get(element.userData.source), this.elements.get(element.userData.target));
             }
         });
     }
@@ -290,7 +211,7 @@ class SceneManager {
 
     onConfigUpdate(newConfig) {
         this.config = newConfig;
-        this.objectFactory.styles = newConfig.styles;
+        this.elementFactory.styles = newConfig.styles;
     }
 }
 
