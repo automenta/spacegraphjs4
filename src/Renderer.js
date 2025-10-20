@@ -5,6 +5,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 class Renderer {
+    static dependencies = ['config', 'camera', 'container'];
     constructor(config, camera, container) {
         this.config = config.renderer;
         this.container = container;
@@ -122,6 +123,12 @@ class Renderer {
         [this.renderer.domElement, this.cssRenderer.domElement, this.cssPointerEventsContainer].forEach(element => {
             element.parentElement.removeChild(element);
         });
+    }
+
+    onConfigUpdate(newConfig) {
+        this.config = newConfig.renderer;
+        this.setBackgroundColor(this.config.backgroundColor);
+        this.setBloom(this.config.bloom.enabled);
     }
 }
 

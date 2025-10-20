@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 class ControlsManager extends THREE.EventDispatcher {
+    static dependencies = ['config', 'camera', 'scene', 'interaction', 'graph', 'renderer'];
     constructor(config, camera, sceneManager, interactionManager, graphManager, renderer) {
         super();
         this.config = config.controls;
@@ -104,6 +105,12 @@ class ControlsManager extends THREE.EventDispatcher {
             this.orbitControls.dispose();
         }
         this.domElement.removeEventListener('wheel', this._onWheel);
+    }
+
+    onConfigUpdate(newConfig) {
+        this.config = newConfig.controls;
+        this.setOrbitControls(this.config.orbit.enabled);
+        this.setAutoZoom(this.config.autoZoom.enabled);
     }
 }
 

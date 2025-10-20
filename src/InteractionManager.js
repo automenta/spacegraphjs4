@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 class InteractionManager extends THREE.EventDispatcher {
+    static dependencies = ['config', 'camera', 'scene', 'renderer'];
     constructor(config, camera, scene, renderer) {
         super();
         this.config = config;
@@ -109,6 +110,10 @@ class InteractionManager extends THREE.EventDispatcher {
 
     destroy() {
         this._removeEventListeners();
+    }
+
+    onConfigUpdate(newConfig) {
+        this.config = newConfig;
     }
 }
 

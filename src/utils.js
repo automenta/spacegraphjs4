@@ -12,3 +12,32 @@ export function deepMerge(target, source) {
     }
     return output;
 }
+
+export function disposeObject(object) {
+    if (!object) return;
+
+    if (object.geometry) {
+        object.geometry.dispose();
+    }
+
+    if (object.material) {
+        if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose());
+        } else {
+            object.material.dispose();
+        }
+    }
+
+    object.traverse(child => {
+        if (child.geometry) {
+            child.geometry.dispose();
+        }
+        if (child.material) {
+            if (Array.isArray(child.material)) {
+                child.material.forEach(material => material.dispose());
+            } else {
+                child.material.dispose();
+            }
+        }
+    });
+}

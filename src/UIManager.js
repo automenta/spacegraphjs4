@@ -65,29 +65,40 @@ class UIManager {
     }
 
     recreateSettings(demo) {
-        this.dom.settingsPanel.innerHTML = '';
-        if (demo?.postLoad) {
-            demo.postLoad(this.graph);
+        this.dom.settings.innerHTML = ''; // Clear existing settings
+        if (demo) {
+            this.createSettingsFromConfig(demo.config, demo);
         } else {
             this.createSettingsFromConfig(this.graph.config);
         }
     }
 
-    createSettingsFromConfig(config) {
+    createSettingsFromConfig(config, demo) {
         for (const key in config) {
             if (typeof config[key] === 'object' && config[key] !== null) {
                 if (config[key].ui) {
-                    this.createToggle(config[key].ui);
+                    this.createControl(config[key].ui, demo);
                 } else {
-                    this.createSettingsFromConfig(config[key]);
+                    this.createSettingsFromConfig(config[key], demo);
                 }
             }
         }
     }
 
-    createToggle({ label, type, setter, getter }) {
-        if (type !== 'toggle') return;
+    createControl(uiConfig, demo) {
+        const controlFactories = {
+            toggle: this._createToggle.bind(this),
+            button: this._createButton.bind(this),
+        };
 
+        const factory = controlFactories[uiConfig.type];
+        if (factory) {
+            const control = factory(uiConfig, demo);
+            this.dom.settingsPanel.appendChild(control);
+        }
+    }
+
+    _createToggle({ label, setter, getter }) {
         const isChecked = this.graph[getter] ? this.graph[getter]() : false;
         const onChange = (isChecked) => this.graph[setter] && this.graph[setter](isChecked);
 
@@ -106,8 +117,25 @@ class UIManager {
         labelEl.appendChild(slider);
         labelEl.appendChild(document.createTextNode(` ${label}`));
 
-        this.dom.settingsPanel.appendChild(labelEl);
-        this.dom.settingsPanel.appendChild(document.createElement('br'));
+        const container = document.createElement('div');
+        container.appendChild(labelEl);
+
+        return container;
+    }
+
+    _createButton({ label, action }, demo) {
+        const button = document.createElement('button');
+        button.textContent = label;
+        button.addEventListener('click', () => {
+            if (demo && demo.actions && demo.actions[action]) {
+                demo.actions[action](this.graph);
+            }
+        });
+
+        const container = document.createElement('div');
+        container.appendChild(button);
+
+        return container;
     }
 }
 

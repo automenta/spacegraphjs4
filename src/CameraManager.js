@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
 
 class CameraManager {
+    static dependencies = ['config', 'camera', 'controls'];
     constructor(config, camera, controls) {
         this.config = config.camera;
         this.camera = camera;
@@ -120,6 +121,10 @@ class CameraManager {
         if (this.controlsManager.orbitControls) {
             this.controlsManager.orbitControls.target.copy(target);
         }
+    }
+
+    onConfigUpdate(newConfig) {
+        this.config = newConfig.camera;
     }
 }
 

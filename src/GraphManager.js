@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 class GraphManager extends THREE.EventDispatcher {
+    static dependencies = ['config'];
     constructor(config) {
         super();
         this.config = config;
@@ -32,6 +33,11 @@ class GraphManager extends THREE.EventDispatcher {
         }
         this.edges.set(edge.id, edge);
         this.dispatchEvent({ type: 'edge:added', edge });
+    }
+
+    connect(sourceId, targetId, edgeProps = {}) {
+        const edge = { id: `edge-${sourceId}-${targetId}-${Date.now()}`, source: sourceId, target: targetId, type: 'edge', ...edgeProps };
+        this.addEdge(edge);
     }
 
     remove(elementId) {
@@ -101,6 +107,10 @@ class GraphManager extends THREE.EventDispatcher {
     clear() {
         this.nodes.clear();
         this.edges.clear();
+    }
+
+    onConfigUpdate(newConfig) {
+        this.config = newConfig;
     }
 }
 

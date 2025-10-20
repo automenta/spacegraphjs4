@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import ObjectFactory from './ObjectFactory.js';
+import { disposeObject } from './utils.js';
 
 class SceneManager {
+    static dependencies = ['config', 'renderer', 'graph', 'SpaceGraph'];
     constructor(config, renderer, graph, SpaceGraph) {
         this.config = config;
         this.scene = renderer.getScene();
@@ -119,29 +121,8 @@ class SceneManager {
         if (!object) return;
 
         this.scene.remove(object);
-        this._disposeObject(object);
+        disposeObject(object);
         this.elements.delete(elementId);
-    }
-
-    _disposeObject(object) {
-        if (object.geometry) object.geometry.dispose();
-        if (object.material) {
-            if (Array.isArray(object.material)) {
-                object.material.forEach(m => m.dispose());
-            } else {
-                object.material.dispose();
-            }
-        }
-        object.traverse(child => {
-            if (child.geometry) child.geometry.dispose();
-            if (child.material) {
-                if (Array.isArray(child.material)) {
-                    child.material.forEach(m => m.dispose());
-                } else {
-                    child.material.dispose();
-                }
-            }
-        });
     }
 
     update(elementId, props) {
@@ -271,7 +252,7 @@ class SceneManager {
         // Clear scene
         [...this.elements.keys()].forEach(id => this._removeElement(id));
         if (this.hoverFrame) {
-            this._disposeObject(this.hoverFrame);
+            disposeObject(this.hoverFrame);
             this.scene.remove(this.hoverFrame);
         }
     }
@@ -311,6 +292,11 @@ class SceneManager {
                 .easing(TWEEN.Easing.Quadratic.InOut)
                 .start();
         }
+    }
+
+    onConfigUpdate(newConfig) {
+        this.config = newConfig;
+        this.objectFactory.styles = newConfig.styles;
     }
 }
 

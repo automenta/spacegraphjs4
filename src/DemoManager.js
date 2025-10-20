@@ -20,6 +20,10 @@ class DemoManager {
 
         this.graph.clear();
 
+        if (demo.config) {
+            this.graph.loadConfig(demo.config);
+        }
+
         let elements;
         if (typeof demo.elements === 'function') {
             elements = await demo.elements();

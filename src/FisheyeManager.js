@@ -8,6 +8,7 @@ import * as THREE from 'three';
  * magnifying the center of the view and compressing the periphery.
  */
 class FisheyeManager {
+    static dependencies = ['config', 'camera', 'scene'];
     constructor(config, camera, sceneManager) {
         this.config = config.fisheye || { enabled: false };
         this.camera = camera;
@@ -96,6 +97,11 @@ class FisheyeManager {
      */
     destroy() {
         this.restorePositions();
+    }
+
+    onConfigUpdate(newConfig) {
+        this.config = newConfig.fisheye || { enabled: false };
+        this.setEnabled(this.config.enabled);
     }
 }
 

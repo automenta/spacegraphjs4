@@ -1,6 +1,7 @@
 import * as d3 from 'd3-force-3d';
 
 class LayoutManager {
+    static dependencies = ['config', 'graph', 'scene'];
     constructor(config, graph, scene) {
         this.config = config.layout;
         this.graphManager = graph;
@@ -97,6 +98,12 @@ class LayoutManager {
         this.graphManager.removeEventListener('node:removed', this._onNodeRemovedHandler);
         this.graphManager.removeEventListener('edge:added', this._onEdgeAddedHandler);
         this.graphManager.removeEventListener('edge:removed', this._onEdgeRemovedHandler);
+    }
+
+    onConfigUpdate(newConfig) {
+        this.config = newConfig.layout;
+        this.simulation = this._initSimulation();
+        this._updateSimulation();
     }
 }
 
