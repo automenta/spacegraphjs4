@@ -24,8 +24,10 @@ export const DynamicControls = {
             ui: {
                 label: 'Fisheye Effect',
                 type: 'toggle',
-                setter: 'setFisheye',
-                getter: 'isFisheyeEnabled',
+                manager: 'fisheye',
+                key: 'fisheye',
+                setter: 'setEnabled',
+                getter: 'isEnabled',
             },
         },
         renderer: {
@@ -34,6 +36,8 @@ export const DynamicControls = {
                 ui: {
                     label: 'Bloom Effect',
                     type: 'toggle',
+                    manager: 'renderer',
+                    key: 'bloom',
                     setter: 'setBloom',
                     getter: 'isBloomEnabled',
                 },
@@ -45,6 +49,8 @@ export const DynamicControls = {
                 ui: {
                     label: 'Orbit Controls',
                     type: 'toggle',
+                    manager: 'controls',
+                    key: 'orbit',
                     setter: 'setOrbitControls',
                     getter: 'isOrbitControlsEnabled',
                 },
@@ -54,6 +60,8 @@ export const DynamicControls = {
                 ui: {
                     label: 'AutoZoom',
                     type: 'toggle',
+                    manager: 'controls',
+                    key: 'autoZoom',
                     setter: 'setAutoZoom',
                     getter: 'isAutoZoomEnabled',
                 },

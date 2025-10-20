@@ -1,10 +1,13 @@
 // src/config.js
+import AnimationManager from './AnimationManager.js';
 import CameraManager from './CameraManager.js';
 import ControlsManager from './ControlsManager.js';
 import FisheyeManager from './FisheyeManager.js';
 import GraphManager from './GraphManager.js';
 import InteractionManager from './InteractionManager.js';
 import LayoutManager from './LayoutManager.js';
+import MouseManager from './MouseManager.js';
+import RaycastManager from './RaycastManager.js';
 import Renderer from './Renderer.js';
 import SceneManager from './SceneManager.js';
 
@@ -18,13 +21,18 @@ export const defaultConfig = {
         camera: CameraManager,
         layout: LayoutManager,
         fisheye: FisheyeManager,
+        animation: AnimationManager,
+        mouse: MouseManager,
+        raycast: RaycastManager,
+    },
+    animation: {
+        duration: 500,
     },
     camera: {
         initialPosition: { x: 0, y: 0, z: 1000 },
         near: 0.1,
         far: 10000,
         fov: 45,
-        animationDuration: 500,
         zoomSpeed: 0.002,
         zoom: {
             padding: 1.2,
@@ -36,6 +44,8 @@ export const defaultConfig = {
             ui: {
                 label: 'Orbit Controls',
                 type: 'toggle',
+                manager: 'controls',
+                key: 'orbit',
                 setter: 'setOrbitControls',
                 getter: 'isOrbitControlsEnabled',
             },
@@ -45,14 +55,16 @@ export const defaultConfig = {
             ui: {
                 label: 'AutoZoom',
                 type: 'toggle',
+                manager: 'controls',
+                key: 'autoZoom',
                 setter: 'setAutoZoom',
                 getter: 'isAutoZoomEnabled',
             },
         },
     },
     interaction: {
-        dragThreshold: 2,
         doubleClickTimeout: 300,
+        dragThreshold: 5,
     },
     scope: {
         fadeDuration: 250,
@@ -65,8 +77,10 @@ export const defaultConfig = {
         ui: {
             label: 'Fisheye Effect',
             type: 'toggle',
-            setter: 'setFisheye',
-            getter: 'isFisheyeEnabled',
+            manager: 'fisheye',
+            key: 'fisheye',
+            setter: 'setEnabled',
+            getter: 'isEnabled',
         },
     },
     styles: {
@@ -105,6 +119,8 @@ export const defaultConfig = {
             ui: {
                 label: 'Bloom Effect',
                 type: 'toggle',
+                manager: 'renderer',
+                key: 'bloom',
                 setter: 'setBloom',
                 getter: 'isBloomEnabled',
             },

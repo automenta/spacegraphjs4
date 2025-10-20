@@ -1,16 +1,16 @@
 import * as THREE from 'three';
-import TWEEN from '@tweenjs/tween.js';
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import ObjectFactory from './ObjectFactory.js';
 import { disposeObject } from './utils.js';
 
 class SceneManager {
-    static dependencies = ['config', 'renderer', 'graph', 'SpaceGraph'];
-    constructor(config, renderer, graph, SpaceGraph) {
+    static dependencies = ['config', 'renderer', 'graph', 'SpaceGraph', 'animation'];
+    constructor(config, renderer, graph, SpaceGraph, animationManager) {
         this.config = config;
         this.scene = renderer.getScene();
         this.graphManager = graph;
         this.eventDispatcher = SpaceGraph;
+        this.animationManager = animationManager;
         this.elements = new Map(); // Visual objects
         this.objectFactory = new ObjectFactory(config.styles);
 
@@ -280,17 +280,11 @@ class SceneManager {
 
     _tweenOpacity(element, targetOpacity, duration) {
         if (element instanceof CSS3DObject) {
-            new TWEEN.Tween(element.element.style)
-                .to({ opacity: targetOpacity }, duration)
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .start();
+            this.animationManager.createTween(element.element.style, { opacity: targetOpacity }, duration).start();
         } else if (element.material) {
             const material = element.material;
             material.transparent = true;
-            new TWEEN.Tween(material)
-                .to({ opacity: targetOpacity }, duration)
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .start();
+            this.animationManager.createTween(material, { opacity: targetOpacity }, duration).start();
         }
     }
 

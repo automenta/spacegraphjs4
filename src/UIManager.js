@@ -65,8 +65,8 @@ class UIManager {
     }
 
     recreateSettings(demo) {
-        this.dom.settings.innerHTML = ''; // Clear existing settings
-        if (demo) {
+        this.dom.settingsPanel.innerHTML = ''; // Clear existing settings
+        if (demo && demo.config) {
             this.createSettingsFromConfig(demo.config, demo);
         } else {
             this.createSettingsFromConfig(this.graph.config);
@@ -98,9 +98,12 @@ class UIManager {
         }
     }
 
-    _createToggle({ label, setter, getter }) {
-        const isChecked = this.graph[getter] ? this.graph[getter]() : false;
-        const onChange = (isChecked) => this.graph[setter] && this.graph[setter](isChecked);
+    _createToggle({ label, manager, key, setter, getter }) {
+        const managerInstance = this.graph.managers[manager];
+        if (!managerInstance) return null;
+
+        const isChecked = managerInstance[getter] ? managerInstance[getter]() : false;
+        const onChange = (isChecked) => managerInstance[setter] && managerInstance[setter](isChecked);
 
         const labelEl = document.createElement('label');
         labelEl.className = 'toggle-switch';

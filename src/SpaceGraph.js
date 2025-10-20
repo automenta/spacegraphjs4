@@ -32,16 +32,31 @@ class SpaceGraph extends THREE.EventDispatcher {
             'container': this.container,
         };
 
-        const creationOrder = ['graph', 'renderer', 'scene', 'interaction', 'controls', 'camera', 'layout', 'fisheye'];
+        const managersToCreate = Object.keys(managerClasses);
+        const createdManagers = new Set();
+        let changed = true;
 
-        for (const name of creationOrder) {
-            if (managerClasses[name]) {
+        while (changed) {
+            changed = false;
+            for (const name of managersToCreate) {
+                if (createdManagers.has(name)) continue;
+
                 const ManagerClass = managerClasses[name];
                 const dependencies = ManagerClass.dependencies || [];
-                const args = dependencies.map(dep => knownDependencies[dep]);
-                this.managers[name] = new ManagerClass(...args);
-                knownDependencies[name] = this.managers[name];
+                const canCreate = dependencies.every(dep => knownDependencies[dep] || createdManagers.has(dep));
+
+                if (canCreate) {
+                    const args = dependencies.map(dep => knownDependencies[dep] || this.managers[dep]);
+                    this.managers[name] = new ManagerClass(...args);
+                    createdManagers.add(name);
+                    changed = true;
+                }
             }
+        }
+
+        if (createdManagers.size !== managersToCreate.length) {
+            const uncreated = managersToCreate.filter(m => !createdManagers.has(m));
+            console.error('Could not create all managers. Circular dependency? Uncreated:', uncreated);
         }
         this.graph = this.managers.graph;
     }
@@ -96,17 +111,6 @@ class SpaceGraph extends THREE.EventDispatcher {
         }
     }
 
-    // Getters for UI
-    isBloomEnabled() { return this.managers.renderer.isBloomEnabled(); }
-    isOrbitControlsEnabled() { return this.managers.controls.isOrbitControlsEnabled(); }
-    isAutoZoomEnabled() { return this.managers.controls.isAutoZoomEnabled(); }
-    isFisheyeEnabled() { return this.managers.fisheye.isEnabled(); }
-
-    // Setters
-    setBloom(enabled) { this.managers.renderer.setBloom(enabled); }
-    setOrbitControls(enabled) { this.managers.controls.setOrbitControls(enabled); }
-    setAutoZoom(enabled) { this.managers.controls.setAutoZoom(enabled); }
-    setFisheye(enabled) { this.managers.fisheye.setEnabled(enabled); }
 
     // Lifecycle
     clear() {
@@ -132,7 +136,6 @@ class SpaceGraph extends THREE.EventDispatcher {
 
     start() {
         this.managers.renderer.setAnimationLoop((time) => {
-            TWEEN.update(time);
             // Dynamically update all managers
             for (const manager of Object.values(this.managers)) {
                 if (typeof manager.update === 'function') {

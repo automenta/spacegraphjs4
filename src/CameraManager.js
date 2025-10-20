@@ -1,12 +1,12 @@
 import * as THREE from 'three';
-import TWEEN from '@tweenjs/tween.js';
 
 class CameraManager {
-    static dependencies = ['config', 'camera', 'controls'];
-    constructor(config, camera, controls) {
-        this.config = config.camera;
+    static dependencies = ['config', 'camera', 'controls', 'animation'];
+    constructor(config, camera, controls, animationManager) {
+        this.config = config;
         this.camera = camera;
         this.controlsManager = controls;
+        this.animationManager = animationManager;
         this.history = []; // Stack to store previous camera states
         this.isAnimating = false;
         // The point the camera is currently looking at
@@ -40,7 +40,7 @@ class CameraManager {
         const aspect = this.camera.aspect;
 
         const maxDim = Math.max(size.x / aspect, size.y);
-        const distance = this.config.zoom.padding * (maxDim / 2) / Math.tan(fov / 2);
+        const distance = this.config.camera.zoom.padding * (maxDim / 2) / Math.tan(fov / 2);
 
         const direction = new THREE.Vector3().subVectors(this.camera.position, center).normalize();
         const targetPosition = center.clone().add(direction.multiplyScalar(distance));
@@ -58,7 +58,7 @@ class CameraManager {
 
     // Reset the camera to its initial state
     reset() {
-        const { x, y, z } = this.config.initialPosition;
+        const { x, y, z } = this.config.camera.initialPosition;
         const initialPosition = new THREE.Vector3(x, y, z);
         const initialTarget = new THREE.Vector3(0, 0, 0);
 
@@ -72,19 +72,14 @@ class CameraManager {
         this.controlsManager.disable();
 
         const currentPosition = this.camera.position.clone();
-        const currentLookAt = this.currentTarget.clone();
-
-        new TWEEN.Tween(currentPosition)
-            .to(targetPosition, this.config.animationDuration)
-            .easing(TWEEN.Easing.Quadratic.InOut)
+        this.animationManager.createTween(currentPosition, targetPosition, this.config.animation.duration)
             .onUpdate(() => {
                 this.camera.position.copy(currentPosition);
             })
             .start();
 
-        new TWEEN.Tween(currentLookAt)
-            .to(targetLookAt, this.config.animationDuration)
-            .easing(TWEEN.Easing.Quadratic.InOut)
+        const currentLookAt = this.currentTarget.clone();
+        this.animationManager.createTween(currentLookAt, targetLookAt, this.config.animation.duration)
             .onUpdate(() => {
                 this.camera.lookAt(currentLookAt);
                 this.currentTarget.copy(currentLookAt);
@@ -98,16 +93,11 @@ class CameraManager {
             .start();
     }
 
-    // Update needs to be called in the main animation loop
-    update(time) {
-        TWEEN.update(time);
-    }
-
     // Zoom the camera towards a target point
     zoom(target, delta) {
         const direction = new THREE.Vector3().subVectors(target, this.camera.position);
         const distance = direction.length();
-        const zoomDistance = distance * this.config.zoomSpeed * delta;
+        const zoomDistance = distance * this.config.camera.zoomSpeed * delta;
 
         // Don't zoom past the target
         if (zoomDistance > distance) {
@@ -124,7 +114,7 @@ class CameraManager {
     }
 
     onConfigUpdate(newConfig) {
-        this.config = newConfig.camera;
+        this.config = newConfig;
     }
 }
 

@@ -1,13 +1,12 @@
 import * as THREE from 'three';
+import { createNode } from './createNode.js';
 
-export function createBoxNode(data, style) {
+export function createBoxNode(element, style) {
     const geometry = new THREE.BoxGeometry(style.size, style.size, style.size);
     const material = new THREE.MeshStandardMaterial({
         color: style.color,
         transparent: true,
-        opacity: 1,
     });
-    const object = new THREE.Mesh(geometry, material);
-    object.userData = { id: data.id, type: 'box' };
-    return object;
+    const mesh = new THREE.Mesh(geometry, material);
+    return createNode(element, mesh);
 }
