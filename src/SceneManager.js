@@ -93,8 +93,8 @@ class SceneManager {
             return null;
         }
 
-        const points = [sourceNode.position.clone(), targetNode.position.clone()];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        // Use dummy points for initialization; _updateEdgeGeometry will set the correct points.
+        const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
 
         const defaultStyle = this.config.styles.default.edge;
         const color = edgeData.color || defaultStyle.color;
@@ -105,11 +105,11 @@ class SceneManager {
             : new THREE.LineBasicMaterial({ color });
 
         const line = new THREE.Line(geometry, material);
-        if (dashed) {
-            line.computeLineDistances();
-        }
-
         line.userData = { ...edgeData, type: 'edge' };
+
+        // Set the correct geometry immediately upon creation.
+        this._updateEdgeGeometry(line);
+
         return line;
     }
 
@@ -177,12 +177,12 @@ class SceneManager {
         // Update edge geometries to reflect new node positions
         this.elements.forEach(element => {
             if (element.userData.type === 'edge') {
-                this.updateEdgePosition(element);
+                this._updateEdgeGeometry(element);
             }
         });
     }
 
-    updateEdgePosition(edge) {
+    _updateEdgeGeometry(edge) {
         const sourceNode = this.elements.get(edge.userData.source);
         const targetNode = this.elements.get(edge.userData.target);
         if (!sourceNode || !targetNode) return;
@@ -223,7 +223,7 @@ class SceneManager {
     updateConnectedEdges(nodeId) {
         this.elements.forEach(element => {
             if (element.userData.type === 'edge' && (element.userData.source === nodeId || element.userData.target === nodeId)) {
-                this.updateEdgePosition(element);
+                this._updateEdgeGeometry(element);
             }
         });
     }
