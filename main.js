@@ -23,8 +23,12 @@ const graph = new SpaceGraph({
         threshold: 0.1
     },
     controls: {
-        orbit: true,
-        autoZoom: true
+        orbit: {
+            enabled: true
+        },
+        autoZoom: {
+            enabled: true
+        }
     }
 });
 
