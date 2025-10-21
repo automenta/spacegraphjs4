@@ -32,7 +32,7 @@ class DemoManager {
         }
 
         this.graph.load(elements);
-        this.graph.flyTo(); // Auto-zoom to the new scene
+        this.graph.flyTo(); // Auto-frame the new scene
         this.activeDemo = demo;
 
         // Dispatch an event to notify the UI of the change

@@ -14,7 +14,7 @@ class ControlsManager extends THREE.EventDispatcher {
         this.orbitControls = null;
         this.focusedElementId = null;
         this.scopedElementId = null;
-        this.autoZoomEnabled = config.controls.autoZoom.enabled;
+        this.autoNavigateEnabled = config.controls.autoNavigate.enabled;
 
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
@@ -26,7 +26,7 @@ class ControlsManager extends THREE.EventDispatcher {
     init() {
         this.setOrbitControls(this.config.orbit.enabled);
 
-        if (this.config.autoZoom.enabled) {
+        if (this.config.autoNavigate.enabled) {
             this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
         }
     }
@@ -35,8 +35,8 @@ class ControlsManager extends THREE.EventDispatcher {
         return this.orbitControls ? this.orbitControls.enabled : false;
     }
 
-    isAutoZoomEnabled() {
-        return this.autoZoomEnabled;
+    isAutoNavigateEnabled() {
+        return this.autoNavigateEnabled;
     }
 
     setOrbitControls(enabled) {
@@ -53,8 +53,8 @@ class ControlsManager extends THREE.EventDispatcher {
         }
     }
 
-    setAutoZoom(enabled) {
-        this.autoZoomEnabled = enabled;
+    setAutoNavigate(enabled) {
+        this.autoNavigateEnabled = enabled;
         if (enabled) {
             this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
         } else {
@@ -79,7 +79,7 @@ class ControlsManager extends THREE.EventDispatcher {
             this.raycaster.ray.at(10, target); // Project a point 10 units away
         }
 
-        this.dispatchEvent({ type: 'zoom', delta: event.deltaY, target });
+        this.dispatchEvent({ type: 'dolly', delta: event.deltaY, target });
     }
 
     enable() {
@@ -110,7 +110,7 @@ class ControlsManager extends THREE.EventDispatcher {
     onConfigUpdate(newConfig) {
         this.config = newConfig.controls;
         this.setOrbitControls(this.config.orbit.enabled);
-        this.setAutoZoom(this.config.autoZoom.enabled);
+        this.setAutoNavigate(this.config.autoNavigate.enabled);
     }
 }
 

@@ -64,7 +64,7 @@ class SpaceGraph extends THREE.EventDispatcher {
     _initEventListeners() {
         this.managers.interaction.addEventListener('click', ({ id }) => this.toggleFocus(id));
         this.managers.interaction.addEventListener('doubleClick', ({ id }) => this.toggleScope(id));
-        this.managers.controls.addEventListener('zoom', ({ delta, target }) => this.managers.camera.zoom(target, delta));
+        this.managers.controls.addEventListener('dolly', ({ delta, target }) => this.managers.camera.dolly(target, delta));
     }
 
     toggleFocus(nodeId) {

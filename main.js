@@ -28,7 +28,7 @@ const graph = new SpaceGraph({
         orbit: {
             enabled: true,
         },
-        autoZoom: {
+        autoNavigate: {
             enabled: true,
         },
     },

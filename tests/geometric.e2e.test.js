@@ -20,7 +20,7 @@ describe('SpaceGraph.js Geometric Demo', () => {
         await browser.close();
     });
 
-    test('should auto-zoom to fit the geometric demo scene', async () => {
+    test('should auto-frame the geometric demo scene', async () => {
         await page.goto(`http://localhost:${VITE_PORT}`);
         await page.waitForSelector('#spacegraph-container canvas');
 

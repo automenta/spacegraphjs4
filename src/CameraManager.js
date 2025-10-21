@@ -40,7 +40,7 @@ class CameraManager {
         const aspect = this.camera.aspect;
 
         const maxDim = Math.max(size.x / aspect, size.y);
-        const distance = this.config.camera.zoom.padding * (maxDim / 2) / Math.tan(fov / 2);
+        const distance = this.config.camera.frame.padding * (maxDim / 2) / Math.tan(fov / 2);
 
         const direction = new THREE.Vector3().subVectors(this.camera.position, center).normalize();
         const targetPosition = center.clone().add(direction.multiplyScalar(distance));
@@ -93,19 +93,19 @@ class CameraManager {
             .start();
     }
 
-    // Zoom the camera towards a target point
-    zoom(target, delta) {
+    // Dolly the camera towards a target point
+    dolly(target, delta) {
         const direction = new THREE.Vector3().subVectors(target, this.camera.position);
         const distance = direction.length();
-        const zoomDistance = distance * this.config.camera.zoomSpeed * delta;
+        const dollyDistance = distance * this.config.camera.dollySpeed * delta;
 
-        // Don't zoom past the target
-        if (zoomDistance > distance) {
+        // Don't dolly past the target
+        if (dollyDistance > distance) {
             return;
         }
 
         direction.normalize();
-        this.camera.position.add(direction.multiplyScalar(zoomDistance));
+        this.camera.position.add(direction.multiplyScalar(dollyDistance));
 
         // Also update the orbit controls target to pivot around the new point
         if (this.controlsManager.orbitControls) {

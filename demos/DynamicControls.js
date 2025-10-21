@@ -55,15 +55,15 @@ export const DynamicControls = {
                     getter: 'isOrbitControlsEnabled',
                 },
             },
-            autoZoom: {
+            autoNavigate: {
                 enabled: true,
                 ui: {
-                    label: 'AutoZoom',
+                    label: 'Auto-Navigate',
                     type: 'toggle',
                     manager: 'controls',
-                    key: 'autoZoom',
-                    setter: 'setAutoZoom',
-                    getter: 'isAutoZoomEnabled',
+                    key: 'autoNavigate',
+                    setter: 'setAutoNavigate',
+                    getter: 'isAutoNavigateEnabled',
                 },
             },
         },
@@ -75,17 +75,17 @@ export const DynamicControls = {
                     action: 'flyToTarget',
                 },
             },
-            zoomToScene: {
+            frameScene: {
                 ui: {
-                    label: 'Zoom to Full Scene',
+                    label: 'Frame Full Scene',
                     type: 'button',
-                    action: 'zoomToScene',
+                    action: 'frameScene',
                 },
             },
         },
     },
     actions: {
         flyToTarget: (graph) => graph.flyTo('target-node'),
-        zoomToScene: (graph) => graph.flyTo(),
+        frameScene: (graph) => graph.flyTo(),
     }
 };

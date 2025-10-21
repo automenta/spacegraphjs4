@@ -33,8 +33,8 @@ export const defaultConfig = {
         near: 0.1,
         far: 10000,
         fov: 45,
-        zoomSpeed: 0.002,
-        zoom: {
+        dollySpeed: 0.002,
+        frame: {
             padding: 1.2,
         },
     },
@@ -50,15 +50,15 @@ export const defaultConfig = {
                 getter: 'isOrbitControlsEnabled',
             },
         },
-        autoZoom: {
+        autoNavigate: {
             enabled: true,
             ui: {
-                label: 'AutoZoom',
+                label: 'Auto-Navigate',
                 type: 'toggle',
                 manager: 'controls',
-                key: 'autoZoom',
-                setter: 'setAutoZoom',
-                getter: 'isAutoZoomEnabled',
+                key: 'autoNavigate',
+                setter: 'setAutoNavigate',
+                getter: 'isAutoNavigateEnabled',
             },
         },
     },
