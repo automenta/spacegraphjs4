@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import SpaceGraph from './src/SpaceGraph.js';
 import DemoManager from './src/DemoManager.js';
 import UIManager from './src/UIManager.js';
@@ -57,6 +58,7 @@ demoManager.load('Full Demo').then(() => {
 window.SpaceGraph = SpaceGraph;
 window.graph = graph;
 window.demoManager = demoManager;
+window.THREE = THREE;
 
 // Test the event listener
 graph.on('element:click', (event) => {

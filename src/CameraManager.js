@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { calculateCameraPosition } from './threeUtils.js';
 
 class CameraManager {
     static dependencies = ['config', 'camera', 'controls', 'animation'];
@@ -30,22 +31,10 @@ class CameraManager {
             box.setFromObject(target);
         }
 
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
+        if (box.isEmpty()) return;
 
-        // If the bounding box is empty, don't fly anywhere
-        if (size.x === 0 && size.y === 0 && size.z === 0) return;
-
-        const fov = this.camera.fov * (Math.PI / 180);
-        const aspect = this.camera.aspect;
-
-        const maxDim = Math.max(size.x / aspect, size.y);
-        const distance = this.config.camera.frame.padding * (maxDim / 2) / Math.tan(fov / 2);
-
-        const direction = new THREE.Vector3().subVectors(this.camera.position, center).normalize();
-        const targetPosition = center.clone().add(direction.multiplyScalar(distance));
-
-        this.animateCamera(targetPosition, center);
+        const { position, target: lookAt } = calculateCameraPosition(this.camera, box, this.config.camera.frame.padding);
+        this.animateCamera(position, lookAt);
     }
 
     // Go back to the previous camera state

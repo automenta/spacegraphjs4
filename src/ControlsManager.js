@@ -2,22 +2,15 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 class ControlsManager extends THREE.EventDispatcher {
-    static dependencies = ['config', 'camera', 'scene', 'interaction', 'graph', 'renderer'];
-    constructor(config, camera, sceneManager, interactionManager, graphManager, renderer) {
+    static dependencies = ['config', 'camera', 'raycast', 'renderer'];
+    constructor(config, camera, raycastManager, renderer) {
         super();
         this.config = config.controls;
         this.camera = camera;
         this.domElement = renderer.getDomElement();
-        this.sceneManager = sceneManager;
-        this.interactionManager = interactionManager;
-        this.graphManager = graphManager;
+        this.raycastManager = raycastManager;
         this.orbitControls = null;
-        this.focusedElementId = null;
-        this.scopedElementId = null;
         this.autoNavigateEnabled = config.controls.autoNavigate.enabled;
-
-        this.raycaster = new THREE.Raycaster();
-        this.mouse = new THREE.Vector2();
 
         this._onWheel = this._onWheel.bind(this);
         this.init();
@@ -65,19 +58,9 @@ class ControlsManager extends THREE.EventDispatcher {
     _onWheel(event) {
         event.preventDefault();
 
-        this.mouse.x = (event.clientX / this.domElement.clientWidth) * 2 - 1;
-        this.mouse.y = -(event.clientY / this.domElement.clientHeight) * 2 + 1;
-
-        this.raycaster.setFromCamera(this.mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects([...this.sceneManager.elements.values()], true);
-
-        let target;
-        if (intersects.length > 0) {
-            target = intersects[0].point;
-        } else {
-            target = new THREE.Vector3();
-            this.raycaster.ray.at(10, target); // Project a point 10 units away
-        }
+        const x = (event.clientX / this.domElement.clientWidth) * 2 - 1;
+        const y = -(event.clientY / this.domElement.clientHeight) * 2 + 1;
+        const target = this.raycastManager.raycastDollyTarget(x, y);
 
         this.dispatchEvent({ type: 'dolly', delta: event.deltaY, target });
     }

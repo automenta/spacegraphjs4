@@ -50,6 +50,17 @@ class RaycastManager extends THREE.EventDispatcher {
         return this.hoveredElementId;
     }
 
+    raycastDollyTarget(x, y) {
+        this.raycaster.setFromCamera({ x, y }, this.camera);
+        const intersects = this.raycaster.intersectObjects([...this.sceneManager.elements.values()], true);
+        if (intersects.length > 0) {
+            return intersects[0].point;
+        }
+
+        const target = new THREE.Vector3();
+        return this.raycaster.ray.at(10, target); // Project a point 10 units away
+    }
+
     destroy() {
         this.mouseManager.removeEventListener('mousemove', this._onMouseMove);
     }
