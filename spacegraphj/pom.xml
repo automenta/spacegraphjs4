@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <artifactId>spacegraph</artifactId>
+    <groupId>dumb</groupId>
+    <version>1.0</version>
+
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>dumb</groupId>
+        <artifactId>metanarchy</artifactId>
+        <version>1.0</version>
+    </parent>
+
+    <properties>
+        <boofcv.version>1.2.2</boofcv.version>
+    </properties>
+
+
+    <modules>
+        <module>ui</module>
+        <module>phy2d</module>
+        <module>phy3d</module>
+    </modules>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+                <configuration>
+                    <argLine>-Djunit.jupiter.execution.parallel.mode.classes.default=CONCURRENT -Djunit.jupiter.execution.parallel.enabled=true</argLine>
+                    <testFailureIgnore>true</testFailureIgnore>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
