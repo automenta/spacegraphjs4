@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceGraph Integration Tests</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-results {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .pass {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .fail {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        .summary {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .summary.pass {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .summary.fail {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #testOutput {
+            white-space: pre-wrap;
+            background-color: #333;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SpaceGraph Integration Tests</h1>
+        <button id="runTests">Run Integration Tests</button>
+        <div id="testOutput"></div>
+        <div class="test-results">
+            <h2>Test Results</h2>
+            <div id="resultsContainer"></div>
+        </div>
+    </div>
+
+    <!-- Include Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Include our SpaceGraph engine -->
+    <script type="module">
+        // Capture console output
+        const originalLog = console.log;
+        const outputElement = document.getElementById('testOutput');
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.join(' ') + '\n';
+            outputElement.textContent += message;
+            outputElement.scrollTop = outputElement.scrollHeight;
+        };
+        
+        // Import and run tests when button is clicked
+        document.getElementById('runTests').addEventListener('click', async () => {
+            outputElement.textContent = '';
+            document.getElementById('resultsContainer').innerHTML = '';
+            
+            try {
+                const { IntegrationTests } = await import('./integration-tests.js');
+                // Tests will run automatically when imported
+            } catch (error) {
+                console.error('Failed to load integration tests:', error);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'test-result fail';
+                errorDiv.innerHTML = `<strong>Error:</strong> Failed to load integration tests<br><pre>${error.message}</pre>`;
+                document.getElementById('resultsContainer').appendChild(errorDiv);
+            }
+        });
+        
+        // Listen for test results
+        window.addEventListener('testResult', (event) => {
+            const result = event.detail;
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${result.passed ? 'pass' : 'fail'}`;
+            resultDiv.innerHTML = `<strong>${result.name}:</strong> ${result.passed ? 'PASS' : 'FAIL'}${result.error ? `<br><em>Error:</em> ${result.error}` : ''}`;
+            document.getElementById('resultsContainer').appendChild(resultDiv);
+        });
+        
+        window.addEventListener('testSummary', (event) => {
+            const summary = event.detail;
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = `summary ${summary.passed ? 'pass' : 'fail'}`;
+            summaryDiv.textContent = `${summary.passedCount}/${summary.totalCount} tests passed`;
+            document.getElementById('resultsContainer').appendChild(summaryDiv);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceGraphJS4 Demos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #666;
+            font-size: 18px;
+        }
+        a {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 30px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SpaceGraphJS4 Demos</h1>
+        <p>Enhanced JavaScript/WebGL Engine with Layout System, UI Components, and Physics Engine</p>
+        <a href="comprehensive-demo.html">View Comprehensive Demo</a>
+        <a href="integration-tests.html">Run Integration Tests</a>
+        <a href="physics-demo.html">View Physics Demo (Legacy)</a>
+        <p><small>For documentation, see <a href="../README.md">README.md</a> and <a href="README.md">demo/README.md</a></small></p>
+    </div>
+    
+    <script>
+        // Redirect to comprehensive demo after 3 seconds
+        setTimeout(() => {
+            window.location.href = 'comprehensive-demo.html';
+        }, 3000);
+    </script>
+</body>
+</html>

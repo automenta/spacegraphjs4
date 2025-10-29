@@ -1,0 +1,41 @@
+{
+  "name": "spacegraphjs4",
+  "version": "1.0.0",
+  "description": "Enhanced SpaceGraph JavaScript/WebGL engine with layout system, UI components, and physics engine",
+  "main": "src/main.js",
+  "scripts": {
+    "demo": "npx serve .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"No build step required for this project\" && exit 0"
+  },
+  "keywords": [
+    "webgl",
+    "3d",
+    "2d",
+    "graphics",
+    "engine",
+    "physics",
+    "layout",
+    "ui"
+  ],
+  "author": "SpaceGraph Team",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.128.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  },
+  "directories": {
+    "demo": "demo",
+    "src": "src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spacegraph/spacegraphjs4.git"
+  },
+  "bugs": {
+    "url": "https://github.com/spacegraph/spacegraphjs4/issues"
+  },
+  "homepage": "https://github.com/spacegraph/spacegraphjs4#readme"
+}

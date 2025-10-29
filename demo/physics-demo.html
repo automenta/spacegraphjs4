@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceGraphJS Physics Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+        
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            max-width: 300px;
+        }
+        
+        #info h1 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        
+        #info ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        
+        #info li {
+            margin-bottom: 5px;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background-color: #444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #666;
+        }
+        
+        button:active {
+            background-color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="info">
+        <h1>SpaceGraphJS Physics Demo</h1>
+        <p>This demo showcases the physics system:</p>
+        <ul>
+            <li><strong>Verlet Physics</strong> - Particle-based physics simulation</li>
+            <li><strong>Spring Constraints</strong> - Connecting surfaces with springs</li>
+            <li><strong>Collision Detection</strong> - Preventing surface overlaps</li>
+            <li><strong>Force-Directed Layout</strong> - Automatic arrangement of connected surfaces</li>
+            <li><strong>Physics Containers</strong> - Specialized containers for physics simulations</li>
+        </ul>
+        <p>Try interacting with the components!</p>
+    </div>
+    
+    <div id="controls">
+        <div class="control-group">
+            <strong>Physics Demos:</strong><br>
+            <button id="springDemo">Spring Demo</button>
+            <button id="collisionDemo">Collision Demo</button>
+            <button id="forceDemo">Force-Directed Demo</button>
+        </div>
+        <div class="control-group">
+            <strong>Global Controls:</strong><br>
+            <button id="gravityOn">Gravity On</button>
+            <button id="gravityOff">Gravity Off</button>
+            <button id="reset">Reset</button>
+        </div>
+        <div class="control-group">
+            <strong>Apply Forces:</strong><br>
+            <button id="repel">Repel</button>
+            <button id="attract">Attract</button>
+        </div>
+    </div>
+
+    <!-- Include Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Main application script -->
+    <script type="module">
+        // Import and run the physics demo
+        import './src/physics-demo.js';
+    </script>
+</body>
+</html>

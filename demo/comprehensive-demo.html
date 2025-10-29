@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceGraphJS Comprehensive Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+        
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #ui-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 300px;
+            background-color: rgba(30, 30, 40, 0.85);
+            border-radius: 8px;
+            padding: 15px;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        #ui-panel h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #4a86e8;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #6bb7ff;
+        }
+        
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .control-row label {
+            flex: 1;
+            font-size: 14px;
+        }
+        
+        .control-row input[type="range"] {
+            flex: 2;
+            margin-left: 10px;
+        }
+        
+        .control-row input[type="checkbox"] {
+            margin-left: 10px;
+        }
+        
+        .control-row select {
+            flex: 2;
+            margin-left: 10px;
+            padding: 4px;
+            background-color: #222;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #4a86e8;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #5a96f8;
+        }
+        
+        button:active {
+            background-color: #3a76d8;
+        }
+        
+        button.secondary {
+            background-color: #666;
+        }
+        
+        button.secondary:hover {
+            background-color: #777;
+        }
+        
+        button.danger {
+            background-color: #e84a4a;
+        }
+        
+        button.danger:hover {
+            background-color: #f85a5a;
+        }
+        
+        #performance-monitor {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 100;
+        }
+        
+        #debug-overlay {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 100;
+            max-width: 400px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="performance-monitor">
+        <div>FPS: <span id="fps-counter">0</span></div>
+        <div>Physics: <span id="physics-time">0</span>ms</div>
+        <div>Render: <span id="render-time">0</span>ms</div>
+        <div>Memory: <span id="memory-usage">N/A</span></div>
+        <div>Surface Creation: <span id="surface-creation-time">0</span>ms</div>
+        <div>Surface Destruction: <span id="surface-destruction-time">0</span>ms</div>
+    </div>
+    
+    <div id="debug-overlay">
+        <div>Camera Mode: <span id="camera-mode">Perspective</span></div>
+        <div>Surfaces: <span id="surface-count">0</span></div>
+        <div>Physics Particles: <span id="particle-count">0</span></div>
+    </div>
+    
+    <div id="ui-panel">
+        <h2>SpaceGraphJS Demo Controls</h2>
+        
+        <div class="control-group">
+            <h3>Demo Scenes</h3>
+            <div class="control-row">
+                <button id="layoutDemoBtn">Layout Demo</button>
+                <button id="physicsDemoBtn">Physics Demo</button>
+            </div>
+            <div class="control-row">
+                <button id="mixedDemoBtn">Mixed Demo</button>
+                <button id="performanceDemoBtn">Performance Demo</button>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Camera Controls</h3>
+            <div class="control-row">
+                <label>Mode:</label>
+                <select id="cameraModeSelect">
+                    <option value="perspective">Perspective</option>
+                    <option value="orthographic">Orthographic</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <button id="resetCameraBtn">Reset Camera</button>
+                <button id="fitViewBtn">Fit View</button>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Physics Settings</h3>
+            <div class="control-row">
+                <label>Gravity:</label>
+                <input type="range" id="gravitySlider" min="0" max="2" step="0.1" value="0.5">
+            </div>
+            <div class="control-row">
+                <label>Iterations:</label>
+                <input type="range" id="iterationsSlider" min="1" max="10" step="1" value="3">
+            </div>
+            <div class="control-row">
+                <button id="toggleGravityBtn">Toggle Gravity</button>
+                <button id="resetPhysicsBtn">Reset Physics</button>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Scene Controls</h3>
+            <div class="control-row">
+                <button id="addSurfaceBtn">Add Surface</button>
+                <button id="removeSurfaceBtn" class="danger">Remove Surface</button>
+            </div>
+            <div class="control-row">
+                <button id="clearSceneBtn" class="danger">Clear Scene</button>
+                <button id="randomizeBtn">Randomize</button>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>UI Components</h3>
+            <div class="control-row">
+                <button id="showButtonsBtn">Show Buttons</button>
+                <button id="hideButtonsBtn">Hide Buttons</button>
+            </div>
+            <div class="control-row">
+                <button id="showSlidersBtn">Show Sliders</button>
+                <button id="hideSlidersBtn">Hide Sliders</button>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Debug Options</h3>
+            <div class="control-row">
+                <label>Bounding Boxes:</label>
+                <input type="checkbox" id="boundingBoxesCheckbox">
+            </div>
+            <div class="control-row">
+                <label>Physics Debug:</label>
+                <input type="checkbox" id="physicsDebugCheckbox">
+            </div>
+            <div class="control-row">
+                <button id="togglePerfMonitorBtn">Toggle Perf Monitor</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Main application script -->
+    <script type="module" src="./comprehensive-demo.js"></script>
+</body>
+</html>
