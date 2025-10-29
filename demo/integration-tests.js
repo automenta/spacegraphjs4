@@ -28,7 +28,7 @@ import { CollisionAwareContainer } from '../src/containers/CollisionAwareContain
 
 // Import physics utilities
 import { applyForce, applyImpulse, createSpringConstraint, applyRepulsion, applyAttraction } from '../src/physics/PhysicsUtils.js';
-import { Vec2, SpringConstraint, DistanceConstraint } from '../src/physics/VerletPhysics.js';
+import { Vec2, SpringConstraint, DistanceConstraint, VerletParticle } from '../src/physics/VerletPhysics.js';
 
 // Import layout utilities
 import { LayoutUtils } from '../src/layout/LayoutUtils.js';
@@ -238,9 +238,9 @@ class IntegrationTests {
         let errorMessage = '';
 
         try {
-            // Create layer and camera system
+            // Create layer and get its camera system
             const layer = new Layer();
-            const cameraSystem = new CameraSystem();
+            const cameraSystem = layer.cameraSystem;
             
             // Create physics container
             const physicsContainer = new PhysicsContainer({ x: 10, y: 10 });
@@ -270,9 +270,7 @@ class IntegrationTests {
             cameraSystem.transitionTo(targetPosition, targetLookAt, 5, 1000);
             
             // Simulate physics and camera updates
-            for (let i = 0; i < 30; i++) {
-                physicsContainer.update(0.016);
-                cameraSystem.update(0.016);
+            for (let i = 0; i < 70; i++) {
                 layer.update(0.016);
             }
             

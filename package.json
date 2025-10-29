@@ -4,8 +4,7 @@
   "description": "Enhanced SpaceGraph JavaScript/WebGL engine with layout system, UI components, and physics engine",
   "main": "src/main.js",
   "scripts": {
-    "demo": "npx serve .",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "wtr test/run-tests.js --node-resolve --playwright --browsers chromium",
     "build": "echo \"No build step required for this project\" && exit 0"
   },
   "keywords": [
@@ -24,7 +23,8 @@
     "three": "^0.128.0"
   },
   "devDependencies": {
-    "serve": "^14.2.0"
+    "@web/test-runner": "^0.18.2",
+    "@web/test-runner-playwright": "^0.11.1"
   },
   "directories": {
     "demo": "demo",

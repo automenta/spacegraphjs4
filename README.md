@@ -213,11 +213,18 @@ All new components integrate seamlessly with the existing scene graph, input han
 
 ## Running the Demo
 
-1. Serve the project directory with a local web server
-2. Open `demo/comprehensive-demo.html` in a browser to see the full demonstration
-3. Open `demo/integration-tests.html` in a browser to run integration tests
+1.  Install dependencies: `npm install`
+2.  Start the demo server: `npx serve .`
+3.  Open `demo/comprehensive-demo.html` in a browser to see the full demonstration.
 
 See `demo/README.md` for detailed information about the demonstration features and controls.
+
+## Running the Tests
+
+1.  Install dependencies: `npm install`
+2.  Run the tests: `npm test`
+
+The tests will run in a headless browser and the results will be displayed in the console.
 
 ## Architecture Notes
 

@@ -5,7 +5,6 @@ import { CircleSurface } from '../src/CircleSurface.js';
 import { TextSurface } from '../src/TextSurface.js';
 import { CubeSurface } from '../src/CubeSurface.js';
 import { SphereSurface } from '../src/SphereSurface.js';
-import { Event } from '../src/Event.js';
 import { CameraSystem } from '../src/CameraSystem.js';
 import { Layer } from '../src/Layer.js';
 
