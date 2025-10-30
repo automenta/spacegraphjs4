@@ -44,7 +44,7 @@ export class Layer {
         this.fingers = new Map(); // Map of active fingers by pointer ID
         this.gestureRecognizers = [
             new TapRecognizer(),
-            new DragRecognizer(),
+            new DragRecognizer(this),
             new PinchRecognizer(),
             new CameraOrbitRecognizer(this.cameraSystem),
             new CameraPanRecognizer(this.cameraSystem),
@@ -71,6 +71,24 @@ export class Layer {
         
         // Attach event listeners to the renderer's DOM element
         // This will be done in the render method when we have access to the renderer
+    }
+
+    /**
+     * Clears all surfaces from the layer
+     */
+    clear() {
+        if (this.rootSurface) {
+            this.rootSurface.stop();
+            this.rootSurface = null;
+        }
+
+        // Remove all objects from the scene except cameras
+        for (let i = this.scene.children.length - 1; i >= 0; i--) {
+            const obj = this.scene.children[i];
+            if (!(obj instanceof THREE.Camera)) {
+                this.scene.remove(obj);
+            }
+        }
     }
 
     /**
@@ -120,6 +138,7 @@ export class Layer {
         canvas.addEventListener('pointerleave', this.pointerLeaveHandler, false);
         canvas.addEventListener('pointercancel', this.pointerLeaveHandler, false);
         canvas.addEventListener('wheel', this.wheelHandler, false);
+        canvas.addEventListener('contextmenu', (event) => event.preventDefault(), false);
     }
 
     /**
@@ -154,6 +173,12 @@ export class Layer {
         if (this.rootSurface) {
             const targetSurface = this.rootSurface.findSurfaceAt(event.clientX, event.clientY);
             if (targetSurface) {
+                // Right-click to zoom
+                if (event.button === 2) {
+                    this.focusOnSurface(targetSurface, 500);
+                    return; // Prevent further processing
+                }
+
                 const inputEvent = new Event('pointerdown', {
                     x: event.clientX,
                     y: event.clientY,

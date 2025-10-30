@@ -129,6 +129,11 @@ class ComprehensiveDemoApp {
             this.createScene();
         });
         
+        document.getElementById('uiShowcaseDemoBtn').addEventListener('click', () => {
+            this.currentDemo = 'ui-showcase';
+            this.createScene();
+        });
+
         // Camera controls
         document.getElementById('cameraModeSelect').addEventListener('change', (event) => {
             if (event.target.value === 'perspective') {
@@ -252,9 +257,7 @@ class ComprehensiveDemoApp {
      */
     createScene() {
         // Clear existing scene
-        if (this.rootSurface) {
-            this.rootSurface.stop();
-        }
+        this.layer.clear();
         
         // Reset arrays
         this.demoSurfaces = [];
@@ -262,7 +265,7 @@ class ComprehensiveDemoApp {
         this.physicsSurfaces = [];
         
         // Create a container surface as root
-        const rootSurface = new ContainerSurface({ x: 30, y: 20 });
+        const rootSurface = new ContainerSurface({ width: 30, height: 20 });
         
         // Set as root surface in layer
         this.layer.setRootSurface(rootSurface);
@@ -280,6 +283,9 @@ class ComprehensiveDemoApp {
                 break;
             case 'performance':
                 this.createPerformanceDemo(rootSurface);
+                break;
+            case 'ui-showcase':
+                this.createUIShowcaseDemo(rootSurface);
                 break;
         }
         
@@ -304,43 +310,43 @@ class ComprehensiveDemoApp {
         rootSurface.addChild(title);
         
         // Create a BorderLayout container
-        const borderLayoutContainer = new BorderLayout({ x: 8, y: 6 });
+        const borderLayoutContainer = new BorderLayout({ width: 8, height: 6 });
         borderLayoutContainer.position.set(1, 1, 0);
         rootSurface.addChild(borderLayoutContainer);
         
         // Add components to border regions
-        const northPanel = new RectSurface({ x: 8, y: 1 }, 0xff4444);
+        const northPanel = new RectSurface({ width: 8, height: 1 }, 0xff4444);
         const northText = new TextSurface("North", { font: 'Arial', fontSize: 14, color: '#ffffff' });
         northText.position.set(4, 0.5, 0);
         northPanel.addChild(northText);
         borderLayoutContainer.add(northPanel, 'north');
         
-        const southPanel = new RectSurface({ x: 8, y: 1 }, 0x44ff44);
+        const southPanel = new RectSurface({ width: 8, height: 1 }, 0x44ff44);
         const southText = new TextSurface("South", { font: 'Arial', fontSize: 14, color: '#000000' });
         southText.position.set(4, 0.5, 0);
         southPanel.addChild(southText);
         borderLayoutContainer.add(southPanel, 'south');
         
-        const westPanel = new RectSurface({ x: 1.5, y: 4 }, 0x4444ff);
+        const westPanel = new RectSurface({ width: 1.5, height: 4 }, 0x4444ff);
         const westText = new TextSurface("W", { font: 'Arial', fontSize: 14, color: '#ffffff' });
         westText.position.set(0.75, 2, 0);
         westPanel.addChild(westText);
         borderLayoutContainer.add(westPanel, 'west');
         
-        const eastPanel = new RectSurface({ x: 1.5, y: 4 }, 0xff44ff);
+        const eastPanel = new RectSurface({ width: 1.5, height: 4 }, 0xff44ff);
         const eastText = new TextSurface("E", { font: 'Arial', fontSize: 14, color: '#ffffff' });
         eastText.position.set(0.75, 2, 0);
         eastPanel.addChild(eastText);
         borderLayoutContainer.add(eastPanel, 'east');
         
-        const centerPanel = new RectSurface({ x: 5, y: 4 }, 0xffff44);
+        const centerPanel = new RectSurface({ width: 5, height: 4 }, 0xffff44);
         const centerText = new TextSurface("Center", { font: 'Arial', fontSize: 16, color: '#000000' });
         centerText.position.set(2.5, 2, 0);
         centerPanel.addChild(centerText);
         borderLayoutContainer.add(centerPanel, 'center');
         
         // Create a GridLayout container
-        const gridLayoutContainer = new GridLayout({ x: 6, y: 6 }, 3, 3);
+        const gridLayoutContainer = new GridLayout({ width: 6, height: 6 }, 3, 3);
         gridLayoutContainer.position.set(10, 1, 0);
         gridLayoutContainer.setSpacing(0.5, 0.5);
         rootSurface.addChild(gridLayoutContainer);
@@ -348,7 +354,7 @@ class ComprehensiveDemoApp {
         // Add colored rectangles to grid cells
         const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff, 0x888888, 0x444444];
         for (let i = 0; i < 9; i++) {
-            const cell = new RectSurface({ x: 1.5, y: 1.5 }, colors[i]);
+            const cell = new RectSurface({ width: 1.5, height: 1.5 }, colors[i]);
             const cellText = new TextSurface(`${i+1}`, { font: 'Arial', fontSize: 16, color: '#ffffff' });
             cellText.position.set(0.75, 0.75, 0);
             cell.addChild(cellText);
@@ -356,7 +362,7 @@ class ComprehensiveDemoApp {
         }
         
         // Create a FlexLayout container
-        const flexLayoutContainer = new FlexLayout({ x: 6, y: 4 });
+        const flexLayoutContainer = new FlexLayout({ width: 6, height: 4 });
         flexLayoutContainer.position.set(17, 1, 0);
         flexLayoutContainer.setFlexOptions({
             direction: 'row',
@@ -366,9 +372,9 @@ class ComprehensiveDemoApp {
         rootSurface.addChild(flexLayoutContainer);
         
         // Add buttons to flex container
-        const flexButton1 = new Button("Btn 1", { x: 1.5, y: 1 }, 0xff6666);
-        const flexButton2 = new Button("Btn 2", { x: 1.5, y: 1 }, 0x66ff66);
-        const flexButton3 = new Button("Btn 3", { x: 1.5, y: 1 }, 0x6666ff);
+        const flexButton1 = new Button("Btn 1", { width: 1.5, height: 1 }, 0xff6666);
+        const flexButton2 = new Button("Btn 2", { width: 1.5, height: 1 }, 0x66ff66);
+        const flexButton3 = new Button("Btn 3", { width: 1.5, height: 1 }, 0x6666ff);
         
         flexLayoutContainer.addChild(flexButton1);
         flexLayoutContainer.addChild(flexButton2);
@@ -408,7 +414,7 @@ class ComprehensiveDemoApp {
         rootSurface.addChild(title);
         
         // Create physics container
-        const physicsContainer = new PhysicsContainer({ x: 28, y: 16 });
+        const physicsContainer = new PhysicsContainer({ width: 28, height: 16 });
         physicsContainer.position.set(1, 1, 0);
         rootSurface.addChild(physicsContainer);
         this.physicsContainer = physicsContainer;
@@ -419,7 +425,7 @@ class ComprehensiveDemoApp {
         // Create connected rectangles
         const rects = [];
         for (let i = 0; i < 5; i++) {
-            const rect = new RectSurface({ x: 1.5, y: 1.5 }, 0xff0000 + i * 0x333333);
+            const rect = new RectSurface({ width: 1.5, height: 1.5 }, 0xff0000 + i * 0x333333);
             rect.position.set(5 + i * 2, 8, 0);
             physicsContainer.addChild(rect);
             rects.push(rect);
@@ -452,7 +458,7 @@ class ComprehensiveDemoApp {
         }
         
         // Create force-directed layout container
-        const forceContainer = new ForceDirectedLayoutContainer({ x: 8, y: 6 });
+        const forceContainer = new ForceDirectedLayoutContainer({ width: 8, height: 6 });
         forceContainer.position.set(18, 1, 0);
         rootSurface.addChild(forceContainer);
         
@@ -493,7 +499,7 @@ class ComprehensiveDemoApp {
         rootSurface.addChild(title);
         
         // Create a 2D rectangle surface
-        const rect = new RectSurface({ x: 2, y: 1.5 }, 0xff0000);
+        const rect = new RectSurface({ width: 2, height: 1.5 }, 0xff0000);
         rect.position.set(2, 2, 0);
         rootSurface.addChild(rect);
         this.demoSurfaces.push(rect);
@@ -515,7 +521,7 @@ class ComprehensiveDemoApp {
         this.demoSurfaces.push(text);
         
         // Create a 3D cube surface
-        const cube = new CubeSurface({ x: 1.5, y: 1.5, z: 1.5 }, 0x0000ff);
+        const cube = new CubeSurface({ width: 1.5, height: 1.5, z: 1.5 }, 0x0000ff);
         cube.position.set(15, 2, 0);
         rootSurface.addChild(cube);
         this.demoSurfaces.push(cube);
@@ -525,12 +531,20 @@ class ComprehensiveDemoApp {
         sphere.position.set(19, 2, 0);
         rootSurface.addChild(sphere);
         this.demoSurfaces.push(sphere);
+
+        // Add event listeners for drag-to-move
+        [rect, circle, text, cube, sphere].forEach(surface => {
+            surface.addEventListener('drag', (event) => {
+                surface.position.x += event.data.dx;
+                surface.position.y += event.data.dy;
+            });
+        });
         
         // Create layout containers
         this.createLayoutDemo(rootSurface);
         
         // Create physics elements
-        const physicsContainer = new PhysicsContainer({ x: 12, y: 8 });
+        const physicsContainer = new PhysicsContainer({ width: 12, height: 8 });
         physicsContainer.position.set(1, 9, 0);
         rootSurface.addChild(physicsContainer);
         this.physicsContainer = physicsContainer;
@@ -539,7 +553,7 @@ class ComprehensiveDemoApp {
         physicsContainer.setGravity(0, 0.3);
         
         // Create physics surfaces
-        const physRect = new RectSurface({ x: 1.5, y: 1.5 }, 0xff8800);
+        const physRect = new RectSurface({ width: 1.5, height: 1.5 }, 0xff8800);
         physRect.position.set(2, 12, 0);
         physicsContainer.addChild(physRect);
         this.physicsSurfaces.push(physRect);
@@ -577,7 +591,7 @@ class ComprehensiveDemoApp {
                 
                 // Alternate between different surface types
                 if ((i + j) % 4 === 0) {
-                    const rect = new RectSurface({ x: 1, y: 1 }, 0xff0000 + (i * j * 100) % 0xffffff);
+                    const rect = new RectSurface({ width: 1, height: 1 }, 0xff0000 + (i * j * 100) % 0xffffff);
                     rect.position.set(x, y, 0);
                     rootSurface.addChild(rect);
                     this.demoSurfaces.push(rect);
@@ -587,7 +601,7 @@ class ComprehensiveDemoApp {
                     rootSurface.addChild(circle);
                     this.demoSurfaces.push(circle);
                 } else if ((i + j) % 4 === 2) {
-                    const cube = new CubeSurface({ x: 1, y: 1, z: 1 }, 0x0000ff + (i * j * 100) % 0xffffff);
+                    const cube = new CubeSurface({ width: 1, height: 1, z: 1 }, 0x0000ff + (i * j * 100) % 0xffffff);
                     cube.position.set(x, y, 0);
                     rootSurface.addChild(cube);
                     this.demoSurfaces.push(cube);
@@ -614,11 +628,68 @@ class ComprehensiveDemoApp {
     }
 
     /**
+     * Creates the UI showcase demo scene
+     */
+    createUIShowcaseDemo(rootSurface) {
+        // Create title
+        const title = new TextSurface(`UI Showcase Demo`, {
+            font: 'Arial',
+            fontSize: 28,
+            color: '#ffffff'
+        });
+        title.position.set(15, 18, 0);
+        rootSurface.addChild(title);
+
+        // Create a container for the UI components
+        const uiContainer = new ContainerSurface({ width: 28, height: 16 });
+        uiContainer.position.set(1, 1, 0);
+        rootSurface.addChild(uiContainer);
+
+        // Add a variety of UI components
+        const button = new Button("Click Me", { width: 4, height: 1.5 }, 0x4a86e8);
+        button.position.set(2, 2, 0);
+        uiContainer.addChild(button);
+
+        const slider = new Slider({ width: 8, height: 1 }, 0, 100, 50);
+        slider.position.set(8, 2, 0);
+        uiContainer.addChild(slider);
+
+        const textInput = new TextInput("Edit me...", { width: 8, height: 1.5 });
+        textInput.position.set(18, 2, 0);
+        uiContainer.addChild(textInput);
+
+        const scrollableContainer = new ScrollableContainer({ width: 8, height: 6 });
+        scrollableContainer.position.set(2, 5, 0);
+        uiContainer.addChild(scrollableContainer);
+
+        for (let i = 0; i < 20; i++) {
+            const item = new RectSurface({ width: 7.5, height: 0.8 }, 0x555555);
+            item.position.set(0, i * 0.9, 0);
+            const itemText = new TextSurface(`Scroll Item ${i + 1}`, {
+                font: 'Arial',
+                fontSize: 14,
+                color: '#ffffff'
+            });
+            itemText.position.set(0.2, 0.2, 0);
+            item.addChild(itemText);
+            scrollableContainer.addChild(item);
+        }
+        scrollableContainer.setContentSize({ width: 8, height: 18 });
+
+        // Add event listeners
+        button.addEventListener('click', () => console.log('Button clicked!'));
+        slider.addEventListener('change', (event) => console.log(`Slider value: ${event.data.value}`));
+        textInput.addEventListener('input', (event) => console.log(`Text input: ${event.data.value}`));
+
+        this.demoSurfaces.push(uiContainer);
+    }
+
+    /**
      * Creates UI components
      */
     createUIComponents(rootSurface) {
         // Create a Slider
-        const slider = new Slider({ x: 6, y: 1 }, 0, 100, 50);
+        const slider = new Slider({ width: 6, height: 1 }, 0, 100, 50);
         slider.position.set(1, 8, 0);
         rootSurface.addChild(slider);
         this.uiComponents.push(slider);
@@ -629,7 +700,7 @@ class ComprehensiveDemoApp {
         });
         
         // Create a TextInput
-        const textInput = new TextInput("Enter text...", { x: 6, y: 1.5 });
+        const textInput = new TextInput("Enter text...", { width: 6, height: 1.5 });
         textInput.position.set(8, 8, 0);
         rootSurface.addChild(textInput);
         this.uiComponents.push(textInput);
@@ -640,14 +711,14 @@ class ComprehensiveDemoApp {
         });
         
         // Create a ScrollableContainer
-        const scrollableContainer = new ScrollableContainer({ x: 6, y: 5 });
+        const scrollableContainer = new ScrollableContainer({ width: 6, height: 5 });
         scrollableContainer.position.set(15, 7, 0);
         rootSurface.addChild(scrollableContainer);
         this.uiComponents.push(scrollableContainer);
         
         // Add many items to the scrollable container
         for (let i = 0; i < 20; i++) {
-            const item = new RectSurface({ x: 5.5, y: 0.4 }, 0x444444 + i * 0x050505);
+            const item = new RectSurface({ width: 5.5, height: 0.4 }, 0x444444 + i * 0x050505);
             item.position.set(0, i * 0.5, 0);
             const itemText = new TextSurface(`Item ${i+1}`, {
                 font: 'Arial',
@@ -660,7 +731,7 @@ class ComprehensiveDemoApp {
         }
         
         // Set content size for scrollable container
-        scrollableContainer.setContentSize({ x: 6, y: 10 });
+        scrollableContainer.setContentSize({ width: 6, height: 10 });
     }
 
     /**
@@ -696,7 +767,7 @@ class ComprehensiveDemoApp {
         
         switch (type) {
             case 'rect':
-                surface = new RectSurface({ x: 1 + Math.random() * 2, y: 1 + Math.random() * 2 },
+                surface = new RectSurface({ width: 1 + Math.random() * 2, height: 1 + Math.random() * 2 },
                                          Math.random() * 0xffffff);
                 break;
             case 'circle':
@@ -710,7 +781,7 @@ class ComprehensiveDemoApp {
                 });
                 break;
             case 'cube':
-                surface = new CubeSurface({ x: 1, y: 1, z: 1 }, Math.random() * 0xffffff);
+                surface = new CubeSurface({ width: 1, height: 1, z: 1 }, Math.random() * 0xffffff);
                 break;
             case 'sphere':
                 surface = new SphereSurface(0.5 + Math.random(), Math.random() * 0xffffff);

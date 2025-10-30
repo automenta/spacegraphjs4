@@ -6,10 +6,10 @@ import { Surface } from './Surface.js';
 export class RectSurface extends Surface {
     /**
      * Creates a new RectSurface
-     * @param {THREE.Vector2} bounds - The bounds of the rectangle (width, height)
+     * @param {object} bounds - The bounds of the rectangle { width, height }
      * @param {number} color - The color of the rectangle (hex)
      */
-    constructor(bounds = { x: 1, y: 1 }, color = 0xffffff) {
+    constructor(bounds = { width: 1, height: 1 }, color = 0xffffff) {
         super(bounds);
         this.color = color;
         this.mesh = null;
@@ -22,7 +22,7 @@ export class RectSurface extends Surface {
      */
     createMesh() {
         // Create geometry
-        const geometry = new THREE.PlaneGeometry(this.bounds.x, this.bounds.y);
+        const geometry = new THREE.PlaneGeometry(this.bounds.width, this.bounds.height);
         
         // Create material
         const material = new THREE.MeshBasicMaterial({ 
@@ -34,7 +34,7 @@ export class RectSurface extends Surface {
         this.mesh = new THREE.Mesh(geometry, material);
         
         // Position the mesh at the center of the bounds
-        this.mesh.position.set(this.bounds.x / 2, this.bounds.y / 2, 0);
+        this.mesh.position.set(this.bounds.width / 2, this.bounds.height / 2, 0);
     }
 
     /**

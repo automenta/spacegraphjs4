@@ -1,2 +1,8 @@
 node_modules/
 serve.log
+screenshots/
+test-results/
+*.png
+*.spec.js
+verify*.js
+debug-text.js

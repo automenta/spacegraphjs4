@@ -12,14 +12,16 @@ export class TextSurface extends Surface {
      * @param {number} options.fontSize - The font size
      * @param {string} options.color - The text color
      * @param {string} options.align - The text alignment ('left', 'center', 'right')
+     * @param {boolean} options.scaleToFit - Whether to scale the text to fit the bounds
      */
-    constructor(text = '', options = {}) {
-        super({ x: 1, y: 1 }); // Bounds will be updated based on text
+    constructor(text = '', bounds = { width: 1, height: 1 }, options = {}) {
+        super(bounds);
         this.text = text;
         this.font = options.font || 'Arial';
         this.fontSize = options.fontSize || 16;
         this.color = options.color || '#ffffff';
         this.align = options.align || 'left';
+        this.scaleToFit = options.scaleToFit || false;
         this.mesh = null;
         this.canvas = null;
         this.texture = null;
@@ -39,28 +41,28 @@ export class TextSurface extends Surface {
         this.canvas = document.createElement('canvas');
         const ctx = this.canvas.getContext('2d');
         
+        // High resolution for crisp text
+        const resolution = 2;
+        this.canvas.width = this.bounds.width * resolution;
+        this.canvas.height = this.bounds.height * resolution;
+        
         // Set font and measure text
-        ctx.font = `${this.fontSize}px ${this.font}`;
-        const metrics = ctx.measureText(this.text);
-        const width = metrics.width;
-        const height = this.fontSize * 1.2; // Approximate height
-        
-        // Update bounds
-        this.bounds = { x: width, y: height };
-        
-        // Set canvas dimensions
-        this.canvas.width = width;
-        this.canvas.height = height;
+        let fontSize = this.fontSize;
+        if (this.scaleToFit) {
+            // Adjust font size to fit the bounds
+            fontSize = this.adjustFontSize(ctx, this.text, this.bounds.width * resolution, this.bounds.height * resolution);
+        }
         
         // Clear and style canvas
-        ctx.clearRect(0, 0, width, height);
-        ctx.font = `${this.fontSize}px ${this.font}`;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.font = `${fontSize}px ${this.font}`;
         ctx.fillStyle = this.color;
         ctx.textAlign = this.align;
         
         // Draw text
-        const x = this.align === 'right' ? width : this.align === 'center' ? width / 2 : 0;
-        ctx.fillText(this.text, x, height - (height - this.fontSize) / 2);
+        const x = this.align === 'right' ? this.canvas.width : this.align === 'center' ? this.canvas.width / 2 : 0;
+        const y = this.canvas.height / 2 + fontSize / 2; // Center vertically
+        ctx.fillText(this.text, x, y);
         
         // Create texture
         if (this.texture) {
@@ -75,13 +77,40 @@ export class TextSurface extends Surface {
             side: THREE.DoubleSide
         });
         
-        const geometry = new THREE.PlaneGeometry(width, height);
+        const geometry = new THREE.PlaneGeometry(this.canvas.width, this.canvas.height);
         
         // Create mesh
         this.mesh = new THREE.Mesh(geometry, material);
         
+        // Scale the mesh to fit the bounds
+        this.mesh.scale.set(this.bounds.width / this.canvas.width, this.bounds.height / this.canvas.height, 1);
+
         // Position the mesh
-        this.mesh.position.set(width / 2, height / 2, 0);
+        this.mesh.position.set(this.bounds.width / 2, this.bounds.height / 2, 0);
+    }
+
+    /**
+     * Adjusts font size to fit text within given dimensions
+     * @param {CanvasRenderingContext2D} ctx - The canvas context
+     * @param {string} text - The text to fit
+     * @param {number} maxWidth - The maximum width
+     * @param {number} maxHeight - The maximum height
+     * @returns {number} The adjusted font size
+     */
+    adjustFontSize(ctx, text, maxWidth, maxHeight) {
+        let fontSize = this.fontSize;
+
+        // Decrease font size until it fits
+        while (fontSize > 0) {
+            ctx.font = `${fontSize}px ${this.font}`;
+            const metrics = ctx.measureText(text);
+            if (metrics.width <= maxWidth && fontSize * 1.2 <= maxHeight) {
+                break;
+            }
+            fontSize -= 1;
+        }
+
+        return fontSize;
     }
 
     /**

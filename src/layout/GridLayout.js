@@ -6,11 +6,11 @@ import { ContainerSurface } from '../ContainerSurface.js';
 export class GridLayout extends ContainerSurface {
     /**
      * Creates a new GridLayout container
-     * @param {object} bounds - The bounds of the container {x, y}
+     * @param {object} bounds - The bounds of the container { width, height }
      * @param {number} rows - Number of rows
      * @param {number} cols - Number of columns
      */
-    constructor(bounds = { x: 1, y: 1 }, rows = 1, cols = 1) {
+    constructor(bounds = { width: 1, height: 1 }, rows = 1, cols = 1) {
         super(bounds);
         this.layoutType = 'grid';
         this.rows = rows;
@@ -50,8 +50,8 @@ export class GridLayout extends ContainerSurface {
         const paddingTop = this.padding.top;
         const paddingBottom = this.padding.bottom;
         
-        const availableWidth = this.bounds.x - paddingLeft - paddingRight;
-        const availableHeight = this.bounds.y - paddingTop - paddingBottom;
+        const availableWidth = this.bounds.width - paddingLeft - paddingRight;
+        const availableHeight = this.bounds.height - paddingTop - paddingBottom;
         
         // Calculate cell dimensions
         const cellWidth = (availableWidth - (this.cols - 1) * this.colSpacing) / this.cols;
@@ -72,7 +72,7 @@ export class GridLayout extends ContainerSurface {
             
             // Set child bounds to cell size
             if (child.setBounds) {
-                child.setBounds({ x: cellWidth, y: cellHeight });
+                child.setBounds({ width: cellWidth, height: cellHeight });
             }
         }
     }

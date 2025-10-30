@@ -6,14 +6,17 @@ import { Fingering } from '../Fingering.js';
 export class DragRecognizer extends Fingering {
     /**
      * Creates a new DragRecognizer
+     * @param {Layer} layer - The layer to search for targets
      * @param {number} minDistance - Minimum distance to qualify as drag in pixels (default: 5)
      * @param {number} maxFingers - Maximum number of fingers for this gesture (default: 1)
      */
-    constructor(minDistance = 5, maxFingers = 1) {
+    constructor(layer, minDistance = 5, maxFingers = 1) {
         super('drag');
+        this.layer = layer;
         this.minDistance = minDistance;
         this.maxFingers = maxFingers;
         this.dragStarted = false;
+        this.targetSurface = null;
     }
 
     /**
@@ -22,8 +25,14 @@ export class DragRecognizer extends Fingering {
      * @returns {boolean} True if this gesture recognizer should capture the finger
      */
     onFingerDown(finger) {
-        // Only capture if we haven't exceeded max fingers
-        return this.fingers.length < this.maxFingers;
+        if (this.fingers.length < this.maxFingers) {
+            // Find target surface
+            if (this.layer.rootSurface) {
+                this.targetSurface = this.layer.rootSurface.findSurfaceAt(finger.x, finger.y);
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -53,6 +62,7 @@ export class DragRecognizer extends Fingering {
             this.fireDragEndEvent(finger);
         }
         this.dragStarted = false;
+        this.targetSurface = null;
     }
 
     /**
@@ -60,8 +70,17 @@ export class DragRecognizer extends Fingering {
      * @param {Finger} finger - The finger that started dragging
      */
     fireDragStartEvent(finger) {
-        // This would typically dispatch an event to the target surface
-        console.log('Drag start detected');
+        if (this.targetSurface) {
+            const event = new Event('dragstart', {
+                x: finger.x,
+                y: finger.y,
+                dx: finger.dx,
+                dy: finger.dy,
+                start_x: finger.start_x,
+                start_y: finger.start_y
+            });
+            this.targetSurface.dispatchEvent(event);
+        }
     }
 
     /**
@@ -69,8 +88,17 @@ export class DragRecognizer extends Fingering {
      * @param {Finger} finger - The finger that moved
      */
     fireDragMoveEvent(finger) {
-        // This would typically dispatch an event to the target surface
-        console.log('Drag move detected');
+        if (this.targetSurface) {
+            const event = new Event('drag', {
+                x: finger.x,
+                y: finger.y,
+                dx: finger.dx,
+                dy: finger.dy,
+                start_x: finger.start_x,
+                start_y: finger.start_y
+            });
+            this.targetSurface.dispatchEvent(event);
+        }
     }
 
     /**
@@ -78,8 +106,17 @@ export class DragRecognizer extends Fingering {
      * @param {Finger} finger - The finger that ended dragging
      */
     fireDragEndEvent(finger) {
-        // This would typically dispatch an event to the target surface
-        console.log('Drag end detected');
+        if (this.targetSurface) {
+            const event = new Event('dragend', {
+                x: finger.x,
+                y: finger.y,
+                dx: finger.dx,
+                dy: finger.dy,
+                start_x: finger.start_x,
+                start_y: finger.start_y
+            });
+            this.targetSurface.dispatchEvent(event);
+        }
     }
 
     /**

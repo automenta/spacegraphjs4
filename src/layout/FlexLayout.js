@@ -6,10 +6,10 @@ import { ContainerSurface } from '../ContainerSurface.js';
 export class FlexLayout extends ContainerSurface {
     /**
      * Creates a new FlexLayout container
-     * @param {object} bounds - The bounds of the container {x, y}
+     * @param {object} bounds - The bounds of the container { width, height }
      * @param {object} options - Layout options
      */
-    constructor(bounds = { x: 1, y: 1 }, options = {}) {
+    constructor(bounds = { width: 1, height: 1 }, options = {}) {
         super(bounds);
         this.layoutType = 'flex';
         this.layoutOptions = {

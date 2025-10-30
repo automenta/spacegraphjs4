@@ -6,9 +6,9 @@ import { ContainerSurface } from '../ContainerSurface.js';
 export class BorderLayout extends ContainerSurface {
     /**
      * Creates a new BorderLayout container
-     * @param {object} bounds - The bounds of the container {x, y}
+     * @param {object} bounds - The bounds of the container { width, height }
      */
-    constructor(bounds = { x: 1, y: 1 }) {
+    constructor(bounds = { width: 1, height: 1 }) {
         super(bounds);
         this.layoutType = 'border';
         this.regionPadding = 5; // Default padding between regions
@@ -32,8 +32,8 @@ export class BorderLayout extends ContainerSurface {
         const paddingTop = this.padding.top;
         const paddingBottom = this.padding.bottom;
         
-        const availableWidth = this.bounds.x - paddingLeft - paddingRight;
-        const availableHeight = this.bounds.y - paddingTop - paddingBottom;
+        const availableWidth = this.bounds.width - paddingLeft - paddingRight;
+        const availableHeight = this.bounds.height - paddingTop - paddingBottom;
         
         let northHeight = 0;
         let southHeight = 0;
@@ -49,16 +49,16 @@ export class BorderLayout extends ContainerSurface {
             
             switch (region) {
                 case 'north':
-                    northHeight = child.bounds.y || northHeight;
+                    northHeight = child.bounds.height || northHeight;
                     break;
                 case 'south':
-                    southHeight = child.bounds.y || southHeight;
+                    southHeight = child.bounds.height || southHeight;
                     break;
                 case 'west':
-                    westWidth = child.bounds.x || westWidth;
+                    westWidth = child.bounds.width || westWidth;
                     break;
                 case 'east':
-                    eastWidth = child.bounds.x || eastWidth;
+                    eastWidth = child.bounds.width || eastWidth;
                     break;
             }
         }
@@ -76,7 +76,7 @@ export class BorderLayout extends ContainerSurface {
                     child.position.y = paddingTop;
                     // Set width to available width
                     if (child.setBounds) {
-                        child.setBounds({ x: availableWidth, y: northHeight });
+                        child.setBounds({ width: availableWidth, height: northHeight });
                     }
                     break;
                 case 'south':
@@ -84,7 +84,7 @@ export class BorderLayout extends ContainerSurface {
                     child.position.y = paddingTop + availableHeight - southHeight;
                     // Set width to available width
                     if (child.setBounds) {
-                        child.setBounds({ x: availableWidth, y: southHeight });
+                        child.setBounds({ width: availableWidth, height: southHeight });
                     }
                     break;
                 case 'west':
@@ -93,8 +93,8 @@ export class BorderLayout extends ContainerSurface {
                     // Set height to available height minus borders
                     if (child.setBounds) {
                         child.setBounds({ 
-                            x: westWidth, 
-                            y: availableHeight - northHeight - southHeight 
+                            width: westWidth,
+                            height: availableHeight - northHeight - southHeight
                         });
                     }
                     break;
@@ -104,8 +104,8 @@ export class BorderLayout extends ContainerSurface {
                     // Set height to available height minus borders
                     if (child.setBounds) {
                         child.setBounds({ 
-                            x: eastWidth, 
-                            y: availableHeight - northHeight - southHeight 
+                            width: eastWidth,
+                            height: availableHeight - northHeight - southHeight
                         });
                     }
                     break;
@@ -115,8 +115,8 @@ export class BorderLayout extends ContainerSurface {
                     // Set size to remaining space
                     if (child.setBounds) {
                         child.setBounds({ 
-                            x: availableWidth - westWidth - eastWidth - 2 * this.regionPadding, 
-                            y: availableHeight - northHeight - southHeight - 2 * this.regionPadding 
+                            width: availableWidth - westWidth - eastWidth - 2 * this.regionPadding,
+                            height: availableHeight - northHeight - southHeight - 2 * this.regionPadding
                         });
                     }
                     break;

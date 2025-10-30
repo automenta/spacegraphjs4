@@ -7,9 +7,9 @@ import { VerletPhysics, VerletParticle, Vec2, SpringConstraint, DistanceConstrai
 export class ContainerSurface extends Surface {
     /**
      * Creates a new ContainerSurface
-     * @param {THREE.Vector2} bounds - The bounds of the surface (width, height)
+     * @param {object} bounds - The bounds of the surface { width, height }
      */
-    constructor(bounds = { x: 1, y: 1 }) {
+    constructor(bounds = { width: 1, height: 1 }) {
         super(bounds);
         this.layoutDirty = true;
         this.layoutType = 'absolute'; // 'absolute', 'relative', 'flex'
@@ -72,7 +72,7 @@ export class ContainerSurface extends Surface {
 
     /**
      * Updates the bounds of this container
-     * @param {object} newBounds - The new bounds {x, y}
+     * @param {object} newBounds - The new bounds { width, height }
      */
     setBounds(newBounds) {
         super.setBounds(newBounds);
@@ -80,7 +80,7 @@ export class ContainerSurface extends Surface {
         
         // Update physics boundaries if enabled
         if (this.physicsEnabled && this.verletPhysics && this.verletPhysics.bounds) {
-            this.verletPhysics.setBounds(0, 0, newBounds.x, newBounds.y);
+            this.verletPhysics.setBounds(0, 0, newBounds.width, newBounds.height);
         }
     }
 
@@ -103,7 +103,7 @@ export class ContainerSurface extends Surface {
                 }
                 
                 // Set boundaries
-                this.verletPhysics.setBounds(0, 0, this.bounds.x, this.bounds.y);
+                this.verletPhysics.setBounds(0, 0, this.bounds.width, this.bounds.height);
             }
             
             // Bind all existing children to physics
@@ -132,8 +132,8 @@ export class ContainerSurface extends Surface {
         
         // If no particle provided, create one at the surface's center
         if (!particle) {
-            const centerX = surface.position.x + surface.bounds.x / 2;
-            const centerY = surface.position.y + surface.bounds.y / 2;
+            const centerX = surface.position.x + surface.bounds.width / 2;
+            const centerY = surface.position.y + surface.bounds.height / 2;
             particle = new VerletParticle(centerX, centerY, surface.physicsMass || 1.0);
             particle.friction = surface.physicsFriction || 0.98;
         }
@@ -290,8 +290,8 @@ export class ContainerSurface extends Surface {
         // based on their local bounds within the container
         for (const child of this.children) {
             // Ensure child position is within container bounds
-            child.position.x = Math.max(0, Math.min(this.bounds.x - (child.bounds.x || 0), child.position.x));
-            child.position.y = Math.max(0, Math.min(this.bounds.y - (child.bounds.y || 0), child.position.y));
+            child.position.x = Math.max(0, Math.min(this.bounds.width - (child.bounds.width || 0), child.position.x));
+            child.position.y = Math.max(0, Math.min(this.bounds.height - (child.bounds.height || 0), child.position.y));
         }
     }
 
@@ -323,16 +323,16 @@ export class ContainerSurface extends Surface {
         const paddingRight = this.padding.right;
         const paddingTop = this.padding.top;
         const paddingBottom = this.padding.bottom;
-        const availableWidth = this.bounds.x - paddingLeft - paddingRight;
-        const availableHeight = this.bounds.y - paddingTop - paddingBottom;
+        const availableWidth = this.bounds.width - paddingLeft - paddingRight;
+        const availableHeight = this.bounds.height - paddingTop - paddingBottom;
         
         let currentX = paddingLeft;
         let currentY = paddingTop;
         let lineHeight = 0;
         
         for (const child of this.children) {
-            const childWidth = child.bounds.x || 0;
-            const childHeight = child.bounds.y || 0;
+            const childWidth = child.bounds.width || 0;
+            const childHeight = child.bounds.height || 0;
             
             // Handle wrapping
             if (wrap === 'wrap' && currentX + childWidth > availableWidth && currentX > paddingLeft) {
@@ -384,16 +384,16 @@ export class ContainerSurface extends Surface {
         const paddingRight = this.padding.right;
         const paddingTop = this.padding.top;
         const paddingBottom = this.padding.bottom;
-        const availableWidth = this.bounds.x - paddingLeft - paddingRight;
-        const availableHeight = this.bounds.y - paddingTop - paddingBottom;
+        const availableWidth = this.bounds.width - paddingLeft - paddingRight;
+        const availableHeight = this.bounds.height - paddingTop - paddingBottom;
         
         let currentX = paddingLeft;
         let currentY = paddingTop;
         let lineWidth = 0;
         
         for (const child of this.children) {
-            const childWidth = child.bounds.x || 0;
-            const childHeight = child.bounds.y || 0;
+            const childWidth = child.bounds.width || 0;
+            const childHeight = child.bounds.height || 0;
             
             // Handle wrapping (column wrap)
             if (wrap === 'wrap' && currentY + childHeight > availableHeight && currentY > paddingTop) {
@@ -528,16 +528,16 @@ export class ContainerSurface extends Surface {
 
         // Separate fixed and flexible children
         for (const child of this.children) {
-            if (child.bounds.y > 0) {
+            if (child.bounds.height > 0) {
                 fixedChildren.push(child);
-                totalHeight += child.bounds.y;
+                totalHeight += child.bounds.height;
             } else {
                 flexibleChildren.push(child);
             }
         }
 
         // Calculate space for flexible children
-        const remainingSpace = Math.max(0, this.bounds.y - totalHeight);
+        const remainingSpace = Math.max(0, this.bounds.height - totalHeight);
         const flexibleHeight = flexibleChildren.length > 0 ? remainingSpace / flexibleChildren.length : 0;
 
         // Position children
@@ -546,7 +546,7 @@ export class ContainerSurface extends Surface {
             child.position.x = 0;
             child.position.y = currentY;
             
-            const childHeight = child.bounds.y > 0 ? child.bounds.y : flexibleHeight;
+            const childHeight = child.bounds.height > 0 ? child.bounds.height : flexibleHeight;
             currentY += childHeight;
         }
     }
@@ -566,12 +566,12 @@ export class ContainerSurface extends Surface {
                 if (!particle.deleted) {
                     // Update surface position based on particle position
                     if (surface.physicsBinding === 'center') {
-                        surface.position.x = particle.position.x - surface.bounds.x / 2;
-                        surface.position.y = particle.position.y - surface.bounds.y / 2;
+                        surface.position.x = particle.position.x - surface.bounds.width / 2;
+                        surface.position.y = particle.position.y - surface.bounds.height / 2;
                     } else {
                         // For nearest edge binding, we would implement more complex logic
-                        surface.position.x = particle.position.x - surface.bounds.x / 2;
-                        surface.position.y = particle.position.y - surface.bounds.y / 2;
+                        surface.position.x = particle.position.x - surface.bounds.width / 2;
+                        surface.position.y = particle.position.y - surface.bounds.height / 2;
                     }
                     
                     // Mark surface transform as dirty

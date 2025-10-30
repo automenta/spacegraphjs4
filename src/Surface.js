@@ -4,9 +4,9 @@
 export class Surface {
     /**
      * Creates a new Surface
-     * @param {THREE.Vector2} bounds - The bounds of the surface (width, height)
+     * @param {object} bounds - The bounds of the surface { width, height }
      */
-    constructor(bounds = { x: 1, y: 1 }) {
+    constructor(bounds = { width: 1, height: 1 }) {
         this.bounds = bounds;
         this.parent = null;
         this.children = [];
@@ -76,7 +76,7 @@ export class Surface {
 
     /**
      * Updates the bounds of this surface
-     * @param {object} newBounds - The new bounds {x, y}
+     * @param {object} newBounds - The new bounds { width, height }
      */
     setBounds(newBounds) {
         this.bounds = newBounds;
@@ -254,8 +254,8 @@ export class Surface {
         return {
             x: this.worldPosition.x,
             y: this.worldPosition.y,
-            width: this.bounds.x,
-            height: this.bounds.y
+            width: this.bounds.width,
+            height: this.bounds.height
         };
     }
 
@@ -320,8 +320,8 @@ export class Surface {
         if (enabled) {
             // If no particle provided, create one
             if (!particle) {
-                const centerX = this.worldPosition.x + this.bounds.x / 2;
-                const centerY = this.worldPosition.y + this.bounds.y / 2;
+                const centerX = this.worldPosition.x + this.bounds.width / 2;
+                const centerY = this.worldPosition.y + this.bounds.height / 2;
                 particle = new VerletParticle(centerX, centerY, this.physicsMass);
                 particle.friction = this.physicsFriction;
             }

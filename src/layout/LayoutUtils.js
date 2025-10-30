@@ -5,7 +5,7 @@ export class LayoutUtils {
     /**
      * Calculates the preferred size of a surface based on its content
      * @param {Surface} surface - The surface to calculate size for
-     * @returns {object} The preferred size {x, y}
+     * @returns {object} The preferred size { width, height }
      */
     static calculatePreferredSize(surface) {
         // For simple surfaces, return their current bounds
@@ -20,28 +20,28 @@ export class LayoutUtils {
             
             for (const child of surface.children) {
                 const childSize = this.calculatePreferredSize(child);
-                maxWidth = Math.max(maxWidth, child.position.x + childSize.x);
-                maxHeight = Math.max(maxHeight, child.position.y + childSize.y);
+                maxWidth = Math.max(maxWidth, child.position.x + childSize.width);
+                maxHeight = Math.max(maxHeight, child.position.y + childSize.height);
             }
             
-            return { x: maxWidth, y: maxHeight };
+            return { width: maxWidth, height: maxHeight };
         }
         
         // Default size
-        return { x: 100, y: 100 };
+        return { width: 100, height: 100 };
     }
 
     /**
      * Centers a surface within a container
      * @param {Surface} surface - The surface to center
-     * @param {object} containerBounds - The container bounds {x, y}
+     * @param {object} containerBounds - The container bounds { width, height }
      */
     static center(surface, containerBounds) {
         if (!surface.setBounds) return;
         
         const surfaceSize = this.calculatePreferredSize(surface);
-        surface.position.x = (containerBounds.x - surfaceSize.x) / 2;
-        surface.position.y = (containerBounds.y - surfaceSize.y) / 2;
+        surface.position.x = (containerBounds.width - surfaceSize.width) / 2;
+        surface.position.y = (containerBounds.height - surfaceSize.height) / 2;
     }
 
     /**
@@ -57,12 +57,12 @@ export class LayoutUtils {
     /**
      * Aligns a surface to the right within a container
      * @param {Surface} surface - The surface to align
-     * @param {object} containerBounds - The container bounds {x, y}
+     * @param {object} containerBounds - The container bounds { width, height }
      * @param {number} padding - Padding from the right edge
      */
     static alignRight(surface, containerBounds, padding = 0) {
         const surfaceSize = this.calculatePreferredSize(surface);
-        surface.position.x = containerBounds.x - surfaceSize.x - padding;
+        surface.position.x = containerBounds.width - surfaceSize.width - padding;
     }
 
     /**
@@ -78,18 +78,18 @@ export class LayoutUtils {
     /**
      * Aligns a surface to the bottom within a container
      * @param {Surface} surface - The surface to align
-     * @param {object} containerBounds - The container bounds {x, y}
+     * @param {object} containerBounds - The container bounds { width, height }
      * @param {number} padding - Padding from the bottom edge
      */
     static alignBottom(surface, containerBounds, padding = 0) {
         const surfaceSize = this.calculatePreferredSize(surface);
-        surface.position.y = containerBounds.y - surfaceSize.y - padding;
+        surface.position.y = containerBounds.height - surfaceSize.height - padding;
     }
 
     /**
      * Distributes surfaces evenly along the x-axis
      * @param {Surface[]} surfaces - The surfaces to distribute
-     * @param {object} containerBounds - The container bounds {x, y}
+     * @param {object} containerBounds - The container bounds { width, height }
      * @param {number} spacing - Spacing between surfaces
      */
     static distributeHorizontally(surfaces, containerBounds, spacing = 0) {
@@ -102,26 +102,26 @@ export class LayoutUtils {
         for (const surface of surfaces) {
             const size = this.calculatePreferredSize(surface);
             surfaceSizes.push(size);
-            totalWidth += size.x;
+            totalWidth += size.width;
         }
         
         // Add spacing
         totalWidth += (surfaces.length - 1) * spacing;
         
         // Calculate starting position to center the group
-        let currentX = (containerBounds.x - totalWidth) / 2;
+        let currentX = (containerBounds.width - totalWidth) / 2;
         
         // Position each surface
         for (let i = 0; i < surfaces.length; i++) {
             surfaces[i].position.x = currentX;
-            currentX += surfaceSizes[i].x + spacing;
+            currentX += surfaceSizes[i].width + spacing;
         }
     }
 
     /**
      * Distributes surfaces evenly along the y-axis
      * @param {Surface[]} surfaces - The surfaces to distribute
-     * @param {object} containerBounds - The container bounds {x, y}
+     * @param {object} containerBounds - The container bounds { width, height }
      * @param {number} spacing - Spacing between surfaces
      */
     static distributeVertically(surfaces, containerBounds, spacing = 0) {
@@ -134,25 +134,25 @@ export class LayoutUtils {
         for (const surface of surfaces) {
             const size = this.calculatePreferredSize(surface);
             surfaceSizes.push(size);
-            totalHeight += size.y;
+            totalHeight += size.height;
         }
         
         // Add spacing
         totalHeight += (surfaces.length - 1) * spacing;
         
         // Calculate starting position to center the group
-        let currentY = (containerBounds.y - totalHeight) / 2;
+        let currentY = (containerBounds.height - totalHeight) / 2;
         
         // Position each surface
         for (let i = 0; i < surfaces.length; i++) {
             surfaces[i].position.y = currentY;
-            currentY += surfaceSizes[i].y + spacing;
+            currentY += surfaceSizes[i].height + spacing;
         }
     }
 
     /**
      * Applies padding to a container's bounds
-     * @param {object} bounds - The original bounds {x, y}
+     * @param {object} bounds - The original bounds { width, height }
      * @param {object} padding - The padding {top, right, bottom, left}
      * @returns {object} The padded bounds {x, y, width, height}
      */
@@ -160,8 +160,8 @@ export class LayoutUtils {
         return {
             x: padding.left,
             y: padding.top,
-            width: bounds.x - padding.left - padding.right,
-            height: bounds.y - padding.top - padding.bottom
+            width: bounds.width - padding.left - padding.right,
+            height: bounds.height - padding.top - padding.bottom
         };
     }
 
@@ -180,9 +180,9 @@ export class LayoutUtils {
             const prevSize = this.calculatePreferredSize(prevSurface);
             
             if (direction === 'horizontal') {
-                currentSurface.position.x = prevSurface.position.x + prevSize.x + spacing;
+                currentSurface.position.x = prevSurface.position.x + prevSize.width + spacing;
             } else {
-                currentSurface.position.y = prevSurface.position.y + prevSize.y + spacing;
+                currentSurface.position.y = prevSurface.position.y + prevSize.height + spacing;
             }
         }
     }
