@@ -1,144 +1,78 @@
 import { ContainerSurface } from '../ContainerSurface.js';
 
 /**
- * BorderLayout arranges children in five regions: North, South, East, West, and Center
+ * BorderLayout arranges children in five regions: North, South, East, West, and Center.
  */
 export class BorderLayout extends ContainerSurface {
-    /**
-     * Creates a new BorderLayout container
-     * @param {object} bounds - The bounds of the container { width, height }
-     */
-    constructor(bounds = { width: 1, height: 1 }) {
+    constructor(bounds) {
         super(bounds);
-        this.layoutType = 'border';
-        this.regionPadding = 5; // Default padding between regions
+        this.regions = {
+            north: null,
+            south: null,
+            east: null,
+            west: null,
+            center: null,
+        };
     }
 
     /**
-     * Adds a child to a specific region
-     * @param {Surface} child - The child surface to add
-     * @param {string} region - The region ('north', 'south', 'east', 'west', 'center')
+     * Adds a child surface to a specific region.
+     * @param {Surface} child - The child surface to add.
+     * @param {string} region - The region to add the child to ('north', 'south', 'east', 'west', 'center').
      */
     add(child, region) {
-        super.addChild(child, { region: region.toLowerCase() });
+        if (this.regions[region]) {
+            // Remove the existing child from the region
+            this.removeChild(this.regions[region]);
+        }
+        this.regions[region] = child;
+        this.addChild(child);
+        this.markLayoutDirty();
     }
 
-    /**
-     * Applies border layout to children
-     */
-    applyBorderLayout() {
-        const paddingLeft = this.padding.left;
-        const paddingRight = this.padding.right;
-        const paddingTop = this.padding.top;
-        const paddingBottom = this.padding.bottom;
-        
-        const availableWidth = this.bounds.width - paddingLeft - paddingRight;
-        const availableHeight = this.bounds.height - paddingTop - paddingBottom;
-        
-        let northHeight = 0;
-        let southHeight = 0;
-        let westWidth = 0;
-        let eastWidth = 0;
-        
-        // First pass: Calculate sizes of border regions
-        for (const child of this.children) {
-            const constraints = child.layoutConstraints || {};
-            const region = constraints.region;
-            
-            if (!region) continue;
-            
-            switch (region) {
-                case 'north':
-                    northHeight = child.bounds.height || northHeight;
-                    break;
-                case 'south':
-                    southHeight = child.bounds.height || southHeight;
-                    break;
-                case 'west':
-                    westWidth = child.bounds.width || westWidth;
-                    break;
-                case 'east':
-                    eastWidth = child.bounds.width || eastWidth;
-                    break;
-            }
-        }
-        
-        // Second pass: Position children
-        for (const child of this.children) {
-            const constraints = child.layoutConstraints || {};
-            const region = constraints.region;
-            
-            if (!region) continue;
-            
-            switch (region) {
-                case 'north':
-                    child.position.x = paddingLeft;
-                    child.position.y = paddingTop;
-                    // Set width to available width
-                    if (child.setBounds) {
-                        child.setBounds({ width: availableWidth, height: northHeight });
-                    }
-                    break;
-                case 'south':
-                    child.position.x = paddingLeft;
-                    child.position.y = paddingTop + availableHeight - southHeight;
-                    // Set width to available width
-                    if (child.setBounds) {
-                        child.setBounds({ width: availableWidth, height: southHeight });
-                    }
-                    break;
-                case 'west':
-                    child.position.x = paddingLeft;
-                    child.position.y = paddingTop + northHeight;
-                    // Set height to available height minus borders
-                    if (child.setBounds) {
-                        child.setBounds({ 
-                            width: westWidth,
-                            height: availableHeight - northHeight - southHeight
-                        });
-                    }
-                    break;
-                case 'east':
-                    child.position.x = paddingLeft + availableWidth - eastWidth;
-                    child.position.y = paddingTop + northHeight;
-                    // Set height to available height minus borders
-                    if (child.setBounds) {
-                        child.setBounds({ 
-                            width: eastWidth,
-                            height: availableHeight - northHeight - southHeight
-                        });
-                    }
-                    break;
-                case 'center':
-                    child.position.x = paddingLeft + westWidth + this.regionPadding;
-                    child.position.y = paddingTop + northHeight + this.regionPadding;
-                    // Set size to remaining space
-                    if (child.setBounds) {
-                        child.setBounds({ 
-                            width: availableWidth - westWidth - eastWidth - 2 * this.regionPadding,
-                            height: availableHeight - northHeight - southHeight - 2 * this.regionPadding
-                        });
-                    }
-                    break;
-            }
-        }
-    }
-
-    /**
-     * Updates the layout of child surfaces
-     * @param {number} deltaTime - Time since last update in seconds
-     */
-    updateLayout(deltaTime) {
+    updateLayout() {
         if (!this.layoutDirty) return;
 
-        this.applyBorderLayout();
-        this.layoutDirty = false;
-        
-        // Update children layouts
-        for (const child of this.children) {
-            if (child instanceof ContainerSurface) {
-                child.updateLayout(deltaTime);
-            }
+        const { north, south, east, west, center } = this.regions;
+        let top = 0;
+        let bottom = this.bounds.height;
+        let left = 0;
+        let right = this.bounds.width;
+
+        if (north) {
+            north.position.x = 0;
+            north.position.y = 0;
+            north.setBounds({ width: this.bounds.width, height: north.bounds.height });
+            top += north.bounds.height;
         }
+
+        if (south) {
+            south.position.x = 0;
+            south.position.y = this.bounds.height - south.bounds.height;
+            south.setBounds({ width: this.bounds.width, height: south.bounds.height });
+            bottom -= south.bounds.height;
+        }
+
+        if (west) {
+            west.position.x = 0;
+            west.position.y = top;
+            west.setBounds({ width: west.bounds.width, height: bottom - top });
+            left += west.bounds.width;
+        }
+
+        if (east) {
+            east.position.x = this.bounds.width - east.bounds.width;
+            east.position.y = top;
+            east.setBounds({ width: east.bounds.width, height: bottom - top });
+            right -= east.bounds.width;
+        }
+
+        if (center) {
+            center.position.x = left;
+            center.position.y = top;
+            center.setBounds({ width: right - left, height: bottom - top });
+        }
+
+        this.layoutDirty = false;
     }
 }

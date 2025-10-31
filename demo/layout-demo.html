@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceGraphJS Layout Demo</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import * as THREE from 'three';
+        import { Stage } from '../src/Stage.js';
+        import { RectSurface } from '../src/RectSurface.js';
+        import { BorderLayout } from '../src/layout/BorderLayout.js';
+        import { GridLayout } from '../src/layout/GridLayout.js';
+        import { Splitting } from '../src/layout/Splitting.js';
+
+        const stage = new Stage();
+        document.body.appendChild(stage.renderer.domElement);
+
+        const scene = new THREE.Scene();
+        stage.scene = scene;
+
+        // Border Layout Example
+        const borderLayout = new BorderLayout({ width: 400, height: 300 });
+        borderLayout.position.x = -500;
+        const north = new RectSurface({ width: 400, height: 50 }, 0xff0000);
+        const south = new RectSurface({ width: 400, height: 50 }, 0x00ff00);
+        const east = new RectSurface({ width: 50, height: 200 }, 0x0000ff);
+        const west = new RectSurface({ width: 50, height: 200 }, 0xffff00);
+        const center = new RectSurface({ width: 300, height: 200 }, 0xff00ff);
+        borderLayout.add(north, 'north');
+        borderLayout.add(south, 'south');
+        borderLayout.add(east, 'east');
+        borderLayout.add(west, 'west');
+        borderLayout.add(center, 'center');
+        stage.addChild(borderLayout);
+
+        // Grid Layout Example
+        const gridLayout = new GridLayout({ width: 400, height: 300 }, 2, 2);
+        gridLayout.position.x = 0;
+        gridLayout.setSpacing(10, 10);
+        for (let i = 0; i < 4; i++) {
+            gridLayout.addChild(new RectSurface({ width: 0, height: 0 }, Math.random() * 0xffffff));
+        }
+        stage.addChild(gridLayout);
+
+        // Splitting Layout Example
+        const splitting = new Splitting({ width: 400, height: 300 }, 'horizontal');
+        splitting.position.x = 500;
+        splitting.addChild(new RectSurface({ width: 0, height: 0 }, 0x00ffff));
+        splitting.addChild(new RectSurface({ width: 0, height: 0 }, 0xffa500));
+        stage.addChild(splitting);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            borderLayout.updateLayout();
+            gridLayout.updateLayout();
+            splitting.updateLayout();
+            stage.render();
+        }
+        animate();
+    </script>
+</body>
+</html>
