@@ -140,6 +140,7 @@
             summaryDiv.className = `summary ${summary.passed ? 'pass' : 'fail'}`;
             summaryDiv.textContent = `${summary.passedCount}/${summary.totalCount} tests passed`;
             document.getElementById('resultsContainer').appendChild(summaryDiv);
+            window.testSummaryReceived = true;
         });
     </script>
 </body>

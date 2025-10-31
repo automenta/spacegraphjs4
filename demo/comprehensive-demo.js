@@ -22,6 +22,7 @@ import { TextInput } from '../src/components/TextInput.js';
 import { ScrollableContainer } from '../src/components/ScrollableContainer.js';
 import { ToggleButton } from '../src/components/ToggleButton.js';
 import { IconToggleButton } from '../src/components/IconToggleButton.js';
+import { Label } from '../src/components/Label.js';
 
 // Import physics components
 import { PhysicsSurface } from '../src/PhysicsSurface.js';
@@ -676,6 +677,11 @@ class ComprehensiveDemoApp {
         iconToggleButton.position.set(2, 6, 0);
         uiContainer.addChild(iconToggleButton);
         window.myIconToggleButton = iconToggleButton; // For verification
+
+        const label = new Label("This is a label", { width: 4, height: 1.5 });
+        label.position.set(2, 8, 0);
+        uiContainer.addChild(label);
+        window.myLabel = label; // For verification
 
         // Add event listeners
         button.addEventListener('click', () => console.log('Button clicked!'));

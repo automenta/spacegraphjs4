@@ -1,18 +1,17 @@
+
 import { TextSurface } from '../TextSurface.js';
 
 /**
- * A Label component for displaying text.
- * It extends TextSurface to provide a more component-oriented interface.
+ * A simple text label component.
  */
 export class Label extends TextSurface {
     /**
      * Creates a new Label.
      * @param {string} text - The text to display.
-     * @param {object} options - Text options (font, fontSize, color, etc.).
+     * @param {object} bounds - The bounds of the label.
+     * @param {number} color - The color of the text.
      */
-    constructor(text = '', options = {}) {
-        // Provide default bounds if not specified, but allow override.
-        const bounds = options.bounds || { width: 100, height: 20 };
-        super(text, bounds, options);
+    constructor(text, bounds, color = 0x000000) {
+        super(text, bounds, color);
     }
 }

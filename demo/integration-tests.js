@@ -56,6 +56,7 @@ class IntegrationTests {
      */
     runAllTests() {
         console.log('Running SpaceGraph Integration Tests...');
+        console.log('Starting tests...');
         
         // Test 1: Combined input handlers (tap, drag, pinch)
         this.testCombinedInputHandlers();
