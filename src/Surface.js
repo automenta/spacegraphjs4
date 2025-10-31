@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+import { ReSurface } from './ReSurface.js';
+
 /**
  * Base class for all surfaces in the scene graph
  */
@@ -306,27 +309,25 @@ export class Surface {
     }
 
     /**
-     * Renders the surface if visible
-     * @param {THREE.WebGLRenderer} renderer - The WebGL renderer
-     * @param {THREE.Scene} scene - The scene to render to
-     * @param {THREE.Camera} camera - The camera to render with
+     * Renders the surface if it's visible in the current rendering context.
+     * @param {ReSurface} resurface - The rendering context.
      */
-    renderIfVisible(renderer, scene, camera) {
-        if (this.visible) {
-            this.render(renderer, scene, camera);
+    renderIfVisible(resurface) {
+        if (this.visible(resurface)) {
+            this.render(resurface);
         }
     }
 
     /**
-     * Renders the surface (abstract method to be implemented by subclasses)
-     * @param {THREE.WebGLRenderer} renderer - The WebGL renderer
-     * @param {THREE.Scene} scene - The scene to render to
-     * @param {THREE.Camera} camera - The camera to render with
+     * Renders the surface. This method should be implemented by subclasses.
+     * @param {ReSurface} resurface - The rendering context.
      */
-    render(renderer, scene, camera) {
+    render(resurface) {
         // Calculate world transform if dirty
         this.calculateWorldTransform();
         
+        const scene = resurface.scene;
+
         if (this.mesh) {
             if (!this.mesh.parent) {
                 scene.add(this.mesh);
@@ -337,7 +338,7 @@ export class Surface {
 
         // Render children
         for (const child of this.children) {
-            child.renderIfVisible(renderer, scene, camera);
+            child.renderIfVisible(resurface);
         }
     }
 
@@ -391,16 +392,22 @@ export class Surface {
     }
 
     /**
-     * Checks if this surface is visible within the given camera view
-     * @param {THREE.Camera} camera - The camera to check against
-     * @returns {boolean} True if visible, false otherwise
+     * Checks if this surface is visible in the current rendering context.
+     * @param {ReSurface} resurface - The rendering context.
+     * @returns {boolean} True if the surface is visible.
      */
-    isVisible(camera) {
-        if (!this.visible) return false;
+    visible(resurface) {
+        // The parent check is from the Java version's visible() method (`parent != null`)
+        if (!this.visible || !this.parent) return false;
+
+        const worldBounds = this.getWorldBounds();
         
-        // For now, a simple check - in a real implementation,
-        // this would do frustum culling
-        return true;
+        // This logic mimics the Java version's `visible(ReSurface r)` method
+        return (
+            (worldBounds.width > 1e-9 && worldBounds.height > 1e-9) &&
+            (!this.clipBounds || resurface.isVisible(worldBounds)) &&
+            resurface.isVisiblePixels(worldBounds)
+        );
     }
     
     /**
