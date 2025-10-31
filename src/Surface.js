@@ -2,11 +2,13 @@
  * Base class for all surfaces in the scene graph
  */
 export class Surface {
+    static #nextId = 0;
     /**
      * Creates a new Surface
      * @param {object} bounds - The bounds of the surface { width, height }
      */
     constructor(bounds = { width: 1, height: 1 }) {
+        this.id = Surface.#nextId++;
         this.bounds = bounds;
         this.parent = null;
         this.children = [];
@@ -116,6 +118,7 @@ export class Surface {
         if (parent) {
             parent.addChild(this);
         }
+        this.starting();
         // Additional initialization logic can be added here
     }
 
@@ -125,12 +128,98 @@ export class Surface {
     stop() {
         if (this.parent) {
             this.parent.removeChild(this);
+            this.stopping();
         }
         // Cleanup logic can be added here
         // Stop all children
         for (const child of this.children) {
             child.stop();
         }
+    }
+
+    /**
+     * Called when the surface is started.
+     * @protected
+     */
+    starting() {
+        // Create a mesh for this surface if it doesn't exist
+        if (!this.mesh) {
+            const geometry = new THREE.PlaneGeometry(this.w(), this.h());
+            const material = new THREE.MeshBasicMaterial({ color: 0xeeeeee, side: THREE.DoubleSide });
+            this.mesh = new THREE.Mesh(geometry, material);
+        }
+    }
+
+    /**
+     * Called when the surface is stopped.
+     * @protected
+     */
+    stopping() {
+        // for implementing in subclasses
+    }
+
+    /**
+     * Finds the root of the surface hierarchy
+     * @returns {Surface} The root surface
+     */
+    root() {
+        return this.parent ? this.parent.root() : this;
+    }
+
+    /**
+     * Finds the first parent (or self) that satisfies the predicate
+     * @param {function(Surface): boolean} predicate - The predicate to test against
+     * @param {boolean} includeSelf - Whether to include this surface in the search
+     * @returns {Surface|null} The matching surface or null
+     */
+    parentOrSelf(predicate, includeSelf = false) {
+        if (includeSelf && predicate(this)) {
+            return this;
+        }
+
+        let p = this.parent;
+        while (p) {
+            if (predicate(p)) {
+                return p;
+            }
+            p = p.parent;
+        }
+
+        return null;
+    }
+
+    /**
+     * Requests focus for this surface
+     * @returns {Surface} This surface
+     */
+    focus() {
+        const r = this.root();
+        if (r) {
+            r.keyFocus(this);
+        } else {
+            console.warn('detached from root for focus():', this);
+        }
+        return this;
+    }
+
+    cx() { return this.bounds.x + this.bounds.width / 2; }
+    cy() { return this.bounds.y + this.bounds.height / 2; }
+    x() { return this.bounds.x; }
+    y() { return this.bounds.y; }
+    left() { return this.bounds.x; }
+    bottom() { return this.bounds.y; }
+    right() { return this.bounds.x + this.bounds.width; }
+    top() { return this.bounds.y + this.bounds.height; }
+    w() { return this.bounds.width; }
+    h() { return this.bounds.height; }
+
+    /**
+     * Handles finger input
+     * @param {Finger} finger - The finger object
+     * @returns {Surface|null} The surface that handled the input or null
+     */
+    finger(finger) {
+        return null;
     }
 
     /**
@@ -238,7 +327,14 @@ export class Surface {
         // Calculate world transform if dirty
         this.calculateWorldTransform();
         
-        // Abstract method - to be implemented by subclasses
+        if (this.mesh) {
+            if (!this.mesh.parent) {
+                scene.add(this.mesh);
+            }
+            // Update mesh position
+            this.mesh.position.set(this.worldPosition.x + this.w() / 2, this.worldPosition.y + this.h() / 2, this.worldPosition.z);
+        }
+
         // Render children
         for (const child of this.children) {
             child.renderIfVisible(renderer, scene, camera);
