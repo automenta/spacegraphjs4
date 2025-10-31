@@ -33,9 +33,6 @@ class SpaceGraphApp {
         // Initialize Three.js renderer
         this.initRenderer();
         
-        // Create layer system
-        this.layer = new Layer();
-        
         // Create a basic scene graph
         this.createScene();
         
@@ -79,8 +76,8 @@ class SpaceGraphApp {
         // Create a container surface as root
         const rootSurface = new ContainerSurface({ x: 20, y: 15 });
         
-        // Set as root surface in layer
-        this.layer.setRootSurface(rootSurface);
+        // Create layer system
+        this.layer = new Layer(rootSurface);
         
         // Create a 2D rectangle surface
         const rect = new RectSurface({ x: 2, y: 1 }, 0xff0000);
