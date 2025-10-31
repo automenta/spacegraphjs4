@@ -26,6 +26,7 @@ import { LayoutUtils } from './layout/LayoutUtils.js';
 // Main application class
 class SpaceGraphApp {
     constructor() {
+        console.log("Creating DemoApp");
         // Create container for canvas
         this.container = document.getElementById('canvas-container');
         

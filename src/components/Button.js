@@ -1,5 +1,7 @@
+
 import { RectSurface } from '../RectSurface.js';
 import { TextSurface } from '../TextSurface.js';
+import { Event } from '../Event.js';
 
 /**
  * Button component with press/release states and click events
@@ -8,11 +10,11 @@ export class Button extends RectSurface {
     /**
      * Creates a new Button
      * @param {string} label - The button label
-     * @param {object} bounds - The bounds of the button {x, y}
+     * @param {object} bounds - The bounds of the button {width, height}
      * @param {number} color - The button color (hex)
      */
-    constructor(label = 'Button', bounds = { x: 100, y: 30 }, color = 0x4a86e8) {
-        super(bounds, color);
+    constructor(label = 'Button', bounds = { width: 100, height: 30 }, color = 0x4a86e8) {
+        super({ width: bounds.width, height: bounds.height }, color);
         this.label = label;
         this.pressedColor = 0x3a76d8;
         this.disabledColor = 0xcccccc;
@@ -29,8 +31,8 @@ export class Button extends RectSurface {
         });
         
         // Position text in the center of the button
-        this.textSurface.position.x = bounds.x / 2;
-        this.textSurface.position.y = bounds.y / 2;
+        this.textSurface.position.x = bounds.width / 2;
+        this.textSurface.position.y = bounds.height / 2;
         this.addChild(this.textSurface);
         
         // Add event listeners

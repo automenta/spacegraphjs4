@@ -1,3 +1,4 @@
+
 import { Surface } from '../src/Surface.js';
 import { ContainerSurface } from '../src/ContainerSurface.js';
 import { RectSurface } from '../src/RectSurface.js';
@@ -7,6 +8,7 @@ import { CubeSurface } from '../src/CubeSurface.js';
 import { SphereSurface } from '../src/SphereSurface.js';
 import { CameraSystem } from '../src/CameraSystem.js';
 import { Layer } from '../src/Layer.js';
+import { ImageSurface } from '../src/ImageSurface.js';
 
 // Import layout containers
 import { BorderLayout } from '../src/layout/BorderLayout.js';
@@ -18,6 +20,8 @@ import { Button } from '../src/components/Button.js';
 import { Slider } from '../src/components/Slider.js';
 import { TextInput } from '../src/components/TextInput.js';
 import { ScrollableContainer } from '../src/components/ScrollableContainer.js';
+import { ToggleButton } from '../src/components/ToggleButton.js';
+import { IconToggleButton } from '../src/components/IconToggleButton.js';
 
 // Import physics components
 import { PhysicsSurface } from '../src/PhysicsSurface.js';
@@ -649,39 +653,34 @@ class ComprehensiveDemoApp {
         const button = new Button("Click Me", { width: 4, height: 1.5 }, 0x4a86e8);
         button.position.set(2, 2, 0);
         uiContainer.addChild(button);
+        window.myButton = button; // For verification
 
-        const slider = new Slider({ width: 8, height: 1 }, 0, 100, 50);
-        slider.position.set(8, 2, 0);
-        uiContainer.addChild(slider);
+        const toggleButton = new ToggleButton("Toggle Me", { width: 4, height: 1.5 });
+        toggleButton.position.set(2, 4, 0);
+        uiContainer.addChild(toggleButton);
+        window.myToggleButton = toggleButton; // For verification
 
-        const textInput = new TextInput("Edit me...", { width: 8, height: 1.5 });
-        textInput.position.set(18, 2, 0);
-        uiContainer.addChild(textInput);
+        const drawPowerIcon = (ctx, width, height, color) => {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width * 0.1;
+            ctx.beginPath();
+            ctx.arc(width / 2, height / 2, width * 0.3, Math.PI * 0.8, Math.PI * 2.2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(width / 2, height * 0.2);
+            ctx.lineTo(width / 2, height * 0.5);
+            ctx.stroke();
+        };
 
-        const scrollableContainer = new ScrollableContainer({ width: 8, height: 6 });
-        scrollableContainer.position.set(2, 5, 0);
-        uiContainer.addChild(scrollableContainer);
-
-        for (let i = 0; i < 20; i++) {
-            const item = new RectSurface({ width: 7.5, height: 0.8 }, 0x555555);
-            item.position.set(0, i * 0.9, 0);
-            const itemText = new TextSurface(`Scroll Item ${i + 1}`, {
-                font: 'Arial',
-                fontSize: 14,
-                color: '#ffffff'
-            });
-            itemText.position.set(0.2, 0.2, 0);
-            item.addChild(itemText);
-            scrollableContainer.addChild(item);
-        }
-        scrollableContainer.setContentSize({ width: 8, height: 18 });
+        const iconToggleButton = new IconToggleButton(drawPowerIcon, { width: 1.5, height: 1.5 });
+        iconToggleButton.position.set(2, 6, 0);
+        uiContainer.addChild(iconToggleButton);
+        window.myIconToggleButton = iconToggleButton; // For verification
 
         // Add event listeners
         button.addEventListener('click', () => console.log('Button clicked!'));
-        slider.addEventListener('change', (event) => console.log(`Slider value: ${event.data.value}`));
-        textInput.addEventListener('input', (event) => console.log(`Text input: ${event.data.value}`));
-
-        this.demoSurfaces.push(uiContainer);
+        toggleButton.addEventListener('change', (event) => console.log(`ToggleButton toggled: ${event.data.toggled}`));
+        iconToggleButton.addEventListener('change', (event) => console.log(`IconToggleButton toggled: ${event.data.toggled}`));
     }
 
     /**
