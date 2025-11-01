@@ -27,7 +27,8 @@ export class Button extends RectSurface {
             font: 'Arial',
             fontSize: 14,
             color: this.textColor,
-            align: 'center'
+            textAlign: 'center',
+            verticalAlign: 'middle'
         });
         
         // Position text in the center of the button
@@ -71,7 +72,9 @@ export class Button extends RectSurface {
         if (this.disabled) return;
         
         this.pressed = true;
-        this.originalColor = this.color;
+        if (this.originalColor === undefined) {
+            this.originalColor = this.color;
+        }
         this.setColor(this.pressedColor);
         
         // Prevent event propagation

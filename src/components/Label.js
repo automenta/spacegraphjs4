@@ -11,7 +11,24 @@ export class Label extends TextSurface {
      * @param {object} bounds - The bounds of the label.
      * @param {number} color - The color of the text.
      */
-    constructor(text, bounds, color = 0x000000) {
-        super(text, bounds, color);
+    constructor(text, bounds, options = {}) {
+        const {
+            color = 0xffffff,
+            font = 'Arial',
+            fontSize = 14,
+            textAlign = 'center',
+            verticalAlign = 'middle'
+        } = options;
+
+        super(text, {
+            ...bounds,
+            font,
+            fontSize,
+            color,
+            textAlign,
+            verticalAlign
+        });
+
+        this.isInteractive = false;
     }
 }

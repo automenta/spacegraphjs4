@@ -62,4 +62,14 @@ export class IconToggleButton extends ToggleButton {
         super.onToggle(event);
         this.updateIconVisuals();
     }
+
+    onPointerDown(event) {
+        super.onPointerDown(event);
+        this.updateIconVisuals();
+    }
+
+    onPointerLeave(event) {
+        super.onPointerLeave(event);
+        this.updateIconVisuals();
+    }
 }

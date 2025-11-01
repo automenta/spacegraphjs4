@@ -39,11 +39,9 @@ export class ToggleButton extends Button {
         });
         this.dispatchEvent(changeEvent);
 
-        // Create a dummy event if one is not provided
-        const upEvent = event || { data: { x: 0, y: 0 }, stopPropagation: () => {} };
-
-        // Call the parent's onPointerUp to handle the "up" state and dispatch a click event
-        super.onPointerUp(upEvent);
+        if (event) {
+            event.stopPropagation = true;
+        }
     }
 
     /**
