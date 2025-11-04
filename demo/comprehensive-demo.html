@@ -261,10 +261,15 @@
     </div>
 
     <!-- Include Three.js -->
-    <script src="../node_modules/three/build/three.min.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "../node_modules/three/build/three.module.js"
+            }
+        }
+    </script>
     
     <!-- Main application script -->
     <script type="module" src="./comprehensive-demo.js"></script>
-    <script type="module" src="../src/components/Label.js"></script>
 </body>
 </html>

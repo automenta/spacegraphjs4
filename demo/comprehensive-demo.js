@@ -1,4 +1,5 @@
 
+import * as THREE from 'three';
 import { Surface } from '../src/Surface.js';
 import { ContainerSurface } from '../src/ContainerSurface.js';
 import { RectSurface } from '../src/RectSurface.js';
