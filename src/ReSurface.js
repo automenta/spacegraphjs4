@@ -50,7 +50,8 @@ export class ReSurface {
      * @param {number} timeNS - The current time in nanoseconds.
      * @param {number} dtS - The delta time since the last frame in seconds.
      */
-    start(pw, ph, timeNS, dtS) {
+    start(renderer, pw, ph, timeNS, dtS) {
+        this.renderer = renderer;
         this.pw = pw;
         this.ph = ph;
         this.frameNS = timeNS;
@@ -163,5 +164,13 @@ export class ReSurface {
         const widthPixels = bounds.width * this.scaleX;
         const heightPixels = bounds.height * this.scaleY;
         return widthPixels >= this.minVisibilityPixelPct && heightPixels >= this.minVisibilityPixelPct;
+    }
+
+    render(root, renderer, camera, startNS, dtS) {
+        this.renderer = renderer;
+        this.camera = camera;
+        const canvas = renderer.domElement;
+        this.start(renderer, canvas.width, canvas.height, startNS, dtS);
+        root.render(this);
     }
 }

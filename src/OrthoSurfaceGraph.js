@@ -7,16 +7,26 @@ import { Stats } from './components/Stats.js';
  * This is analogous to the OrthoSurfaceGraph.java class.
  */
 export class OrthoSurfaceGraph {
-    constructor(content, joglWindow) {
-        this.rendering = new ReSurface();
+    constructor(content, joglWindow, scene, camera) {
+        this.rendering = new ReSurface(null, scene, camera);
         this.root = new Stacking();
         this.window = joglWindow;
         this.content = content;
         this.stats = new Stats();
 
-        this.root.add(this.content);
-        this.root.add(this.stats);
+        if (this.content) {
+            this.root.addChild(this.content);
+        }
+        this.root.addChild(this.stats);
         // this.root.start(this);
+    }
+
+    setRootSurface(surface) {
+        if (this.content) {
+            this.root.removeChild(this.content);
+        }
+        this.content = surface;
+        this.root.addChild(this.content);
     }
 
     /**
@@ -37,7 +47,9 @@ export class OrthoSurfaceGraph {
     render(renderer, startNS, dtS) {
         this.stats.update();
         if (!this.root.isEmpty()) {
-            this.rendering.render(this.root, renderer, startNS, dtS);
+            const canvas = renderer.domElement;
+            this.rendering.start(renderer, canvas.width, canvas.height, startNS, dtS);
+            this.root.render(this.rendering);
         }
     }
 

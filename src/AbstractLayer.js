@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { Finger } from './Finger.js';
 import { TapRecognizer } from './gestures/TapRecognizer.js';
 import { DragRecognizer } from './gestures/DragRecognizer.js';
@@ -18,7 +19,7 @@ export class AbstractLayer {
      */
     constructor() {
         // Camera system for this layer
-        this.cameraSystem = new CameraSystem({
+        this.cameraSystem = new CameraSystem(THREE, {
             panSpeed: 1.0,
             rotateSpeed: 1.0,
             zoomSpeed: 1.0,
@@ -58,6 +59,8 @@ export class AbstractLayer {
         this.pointerMoveHandler = this.onPointerMove.bind(this);
         this.pointerLeaveHandler = this.onPointerLeave.bind(this);
         this.wheelHandler = this.onWheel.bind(this);
+
+        this.onUpdate = [];
     }
 
     /**
@@ -67,6 +70,15 @@ export class AbstractLayer {
     update(deltaTime) {
         // Update camera system
         this.cameraSystem.update(deltaTime);
+
+        // Call onUpdate consumers
+        for (const consumer of this.onUpdate) {
+            consumer(this);
+        }
+    }
+
+    addOnUpdate(consumer) {
+        this.onUpdate.push(consumer);
     }
 
     /**

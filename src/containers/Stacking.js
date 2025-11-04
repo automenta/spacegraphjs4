@@ -15,7 +15,7 @@ export class Stacking extends MutableListContainer {
      */
     doLayout(dtS) {
         for (const child of this.children) {
-            child.bounds.copy(this.bounds);
+            child.bounds = { ...this.bounds };
         }
     }
 }

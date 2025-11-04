@@ -589,10 +589,10 @@ export class ContainerSurface extends Surface {
      * @param {THREE.Scene} scene - The scene to render to
      * @param {THREE.Camera} camera - The camera to render with
      */
-    render(renderer, scene, camera) {
+    render(resurface) {
         // Render children
         for (const child of this.children) {
-            child.renderIfVisible(renderer, scene, camera);
+            child.renderIfVisible(resurface);
         }
     }
 }

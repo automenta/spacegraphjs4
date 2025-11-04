@@ -1,13 +1,16 @@
+import * as THREE from 'three';
+
 /**
  * Unified camera system that handles both 2D orthographic and 3D perspective views
  * Enhanced with smooth navigation controls for both 2D and 3D spaces
  */
 export class CameraSystem {
     /**
-     * Creates a new CameraSystem
+    * Creates a new CameraSystem
+    * @param {object} THREE - The THREE.js object.
      * @param {object} options - Configuration options
      */
-    constructor(options = {}) {
+    constructor(three, options = {}) {
         // Configuration options with defaults
         this.config = {
             // Movement speeds
@@ -58,8 +61,8 @@ export class CameraSystem {
 
         // Animation properties
         this.isAnimating = false;
-        this.animationStartTime = 0;
         this.animationDuration = 0;
+        this.animationElapsedTime = 0;
         this.animationStartValues = {};
         this.animationEndValues = {};
         this.animationEasingFunction = this.easeInOutQuad;
@@ -292,22 +295,26 @@ export class CameraSystem {
         // Handle animations
         if (this.isAnimating) {
             this.updateAnimation(deltaTime);
-        }
-        
-        // Apply smoothing if enabled
-        if (this.config.enableSmoothing) {
-            this.updateSmoothInterpolation(deltaTime);
-        } else {
-            // Direct assignment without smoothing
+            // During animation, the eased progress already provides smoothing.
+            // We directly set the current state to the desired animated state.
             this.currentPosition.copy(this.desiredPosition);
             this.currentTarget.copy(this.desiredTarget);
             this.currentRadius = this.desiredRadius;
         }
-        
+        // Handle user input smoothing only when not animating.
+        else if (this.config.enableSmoothing) {
+            this.updateSmoothInterpolation(deltaTime);
+        } else {
+            // Direct assignment if smoothing is disabled and not animating.
+            this.currentPosition.copy(this.desiredPosition);
+            this.currentTarget.copy(this.desiredTarget);
+            this.currentRadius = this.desiredRadius;
+        }
+
         // Apply transformations to active camera
         this.activeCamera.position.copy(this.currentPosition);
         this.activeCamera.lookAt(this.currentTarget);
-        
+
         // Apply scale for perspective camera
         if (this.activeCamera === this.perspectiveCamera && this.scale !== 1) {
             this.radius *= this.scale;
@@ -339,8 +346,8 @@ export class CameraSystem {
      * @param {number} deltaTime - Time since last update in seconds
      */
     updateAnimation(deltaTime) {
-        const elapsed = Date.now() - this.animationStartTime;
-        const progress = Math.min(elapsed / this.animationDuration, 1.0);
+        this.animationElapsedTime += deltaTime * 1000; // Convert deltaTime to ms
+        const progress = Math.min(this.animationElapsedTime / this.animationDuration, 1.0);
         const easedProgress = this.animationEasingFunction(progress);
         
         // Interpolate all animated properties
@@ -384,7 +391,7 @@ export class CameraSystem {
         this.isAnimating = false;
         
         // Set up new animation
-        this.animationStartTime = Date.now();
+        this.animationElapsedTime = 0;
         this.animationDuration = duration || this.config.animationDuration;
         this.animationEasingFunction = easingFunction || this.easeInOutQuad;
         
@@ -607,5 +614,11 @@ export class CameraSystem {
         return t === 0 || t === 1 ? t : t < 0.5 ? 
             Math.pow(2, 20 * t - 10) / 2 : 
             (2 - Math.pow(2, -20 * t + 10)) / 2;
+    }
+
+    gluLookAt(eyex, eyey, eyez, centerx, centery, centerz, upx, upy, upz) {
+        this.activeCamera.position.set(eyex, eyey, eyez);
+        this.activeCamera.lookAt(centerx, centery, centerz);
+        this.activeCamera.up.set(upx, upy, upz);
     }
 }

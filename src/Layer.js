@@ -13,7 +13,12 @@ export class Layer extends AbstractLayer {
      */
     constructor(content) {
         super();
-        this.orthoSurfaceGraph = new OrthoSurfaceGraph(content, this);
+        this.orthoSurfaceGraph = new OrthoSurfaceGraph(content, this, this.scene, this.cameraSystem.activeCamera);
+        this.addOnUpdate(this.orthoSurfaceGraph.root.update.bind(this.orthoSurfaceGraph.root));
+    }
+
+    setRootSurface(surface) {
+        this.orthoSurfaceGraph.setRootSurface(surface);
     }
 
     /**

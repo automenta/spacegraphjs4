@@ -1,4 +1,4 @@
-import { ContainerSurface } from './ContainerSurface.js';
+import { ContainerSurface } from '../ContainerSurface.js';
 
 /**
  * A container that holds a mutable list of children.
